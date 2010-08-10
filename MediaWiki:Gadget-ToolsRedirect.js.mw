@@ -1,0 +1,282 @@
+var TR = {
+  msg: tools_redirect_msg,
+  tabselem: null,
+  tagselem: null,
+  variants: ['zh-cn', 'zh-hk', 'zh-sg', 'zh-tw'],
+  button: function( click ) {
+    var btn = $j( '<li id="ca-redirect">' + '<a title="' + TR.msg.btndesc +
+      '"><span>' + TR.msg.btntitle + '</span></a></li>' );
+    btn.click( click );
+    $j( 'li#ca-history' ).after( btn );
+  },
+  dialog: function() {
+    var dlg = $j( '<div class="dialog-redirect" title="' + TR.msg.dlgtitle + '"></div>' ).dialog( {
+      bgiframe: true, draggable: false, 
+      resizable: false, modal: true, width: 600 } );
+    TR.tabselem = $j( '<div class="tab-redirect"></div>' ).appendTo( dlg );
+    TR.tagselem = $j( '<ul/>' ).appendTo( TR.tabselem );
+    TR.addTabs();
+    TR.tabselem.tabs();
+  },
+  addTabs: function() {
+    for ( var kname in TR.tabs ) {
+      if ( typeof TR.tabs[kname] === 'function' ) {
+        TR.tabs[kname] = TR.tabs[kname]();
+      }
+      var tab = TR.tabs[kname];
+      TR.tagselem.append( tab.tag );
+      TR.tabselem.append( tab.cont );
+    }
+    // default tab, autoload when dialog initiate
+    TR.loadRedirect( wgPageName );
+  },
+  createTab: function( tabname, tabtitle, callback ) {
+    var tag = $j( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' );
+    var cont = $j( '<div id="tab-' + tabname + '"/>' );
+    $j( '<p class="desc">' + TR.msg.rediloading + '</p>' ).appendTo( cont );
+    $j( 'a', tag ).click( 
+      function() {
+        TR.tabselem.tabs( 'select', '#tab-' + tabname );
+        callback( wgPageName );
+        return false;
+      }
+    );
+    return { 'tag': tag, 'cont': cont, loaded: false };
+  },
+  tabs: {
+    view: function() {
+      return TR.createTab( 'view', TR.msg.tabviewtitle, TR.loadRedirect );
+    },
+    create: function() {
+      return TR.createTab( 'create', TR.msg.tabcreatetitle, TR.findRedirect );
+    }
+  },
+  loading: function( container ) {
+    if ( container.attr( 'tagName' ).toLowerCase() == 'li' ) {
+      container.addClass( 'loading' );
+    } else if ( $j( 'ul li.loading', container ).length == 0 ) {
+      $j( '<li class="loading" />' ).appendTo( $j( 'ul', container ) );
+    }
+  },
+  loaded: function( container ) {
+    if ( container.attr( 'tagName' ).toLowerCase() == 'li' ) {
+      container.removeClass( 'loading' );
+    } else {
+      $j( 'ul li.loading', container ).remove();
+    }
+  },
+  fixall: function() {
+    var pagenames = Array();
+    $j( '.meta-needfix', TR.tabs.view.cont ).each( function() {
+      pagenames.push( $j( this ).text() );
+    } );
+    TR.fix( pagenames );
+    return false;
+  },
+  fixit: function() {
+    var container = $j( this ).parent().parent();
+    var pagename = $j( '.meta-title', container ).text();
+    TR.fix( [pagename] );
+    return false;
+  },
+  fix: function( pagenames ) {
+    var desc = $j( 'p.desc', TR.tabs.view.cont ).text( TR.msg.fixloading );
+    var ulelem = $j( 'ul', TR.tabs.view.cont ).html( '' );
+    TR.loading( TR.tabs.view.cont );
+    var allpages = pagenames.join( '|' );
+    TR.bulkEdit( allpages, TR.msg.fixtext.replace( '$1', wgPageName ),
+      TR.msg.fixsummary, function() {
+        TR.loaded( TR.tabs.view.cont );
+        TR.reloadTab( 'view' );
+        TR.loadRedirect( wgPageName );
+      }
+    );
+  },
+  createit: function() {
+    var container = $j( this ).parent().parent();
+    var pagename = $j( '.meta-title', container ).text();
+    container.text( TR.msg.createloading ).attr( 'class', 'loading' );
+    TR.bulkEdit( [pagename], TR.msg.createtext.replace( '$1', wgPageName ),
+      TR.msg.createsummary, function() {
+        if ( $j( 'li', TR.tabs.create.cont ).length > 1 ) {
+          var cc = container;
+          container.remove();
+        } else {
+          TR.reloadTab( 'create' );
+          TR.reloadTab( 'view' );
+          TR.findRedirect( wgPageName );
+        }
+      }
+    );
+    return false;
+  },
+  createall: function () {
+    var pagenames = Array();
+    $j( '.meta-title', TR.tabs.create.cont ).each( function() {
+      pagenames.push( $j( this ).text() );
+    } );
+    var desc = $j( 'p.desc', TR.tabs.create.cont ).text( TR.msg.createloading );
+    var ulelem = $j( 'ul', TR.tabs.create.cont ).html( '' );
+    TR.loading( TR.tabs.create.cont );
+    allpages = pagenames.join( '|' );
+    TR.bulkEdit( allpages, TR.msg.createtext.replace( '$1', wgPageName ),
+      TR.msg.createsummary, function() {
+        TR.loaded( TR.tabs.create.cont );
+        TR.reloadTab( 'create' );
+        TR.reloadTab( 'view' );
+        TR.findRedirect( wgPageName );
+      }
+    );
+    return false;
+  },
+  bulkEdit: function( titles, text, summary, callback ) {
+    $j.ajax( TR.buildQuery(
+      { action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' },
+      null,
+      function( data ) {
+        var pages = data.query.pages;
+        var l = 0; var f = 0;
+        for( var pageid in pages ) {
+          l ++;
+        }
+        for( var pageid in pages ) {
+          page = pages[pageid];
+          $j.ajax( TR.buildQuery(
+            { action: 'edit', title: page.title, token: page.edittoken,
+              'text': text, 'summary': summary }, null,
+            function() {
+              f ++;
+              if ( l == f ) {
+                callback();
+              }
+            }
+          ) );
+        }
+      }
+    ) );
+  },
+  reloadTab: function( tabname ) {
+    var tab = TR.tabs[tabname];
+    $j( 'p.desc', tab.cont ).text( TR.msg.rediloading );
+    $j( 'ul', tab.cont ).remove();
+    tab.loaded = false;
+  },
+  loadRedirect: function( pagename ) {
+    if ( !TR.tabs.view.loaded ) {
+      TR.tabs.view.loaded = true;
+      TR.loadRedirectCore( pagename, TR.tabs.view.cont, 0 );
+    }
+  },
+  loadRedirectCore: function( pagename, container, deep ) {
+    var ulcontainer = $j( '<ul/>' ).appendTo( container );
+    $j.ajax( TR.buildQuery(
+      { action: 'query', list: 'backlinks', bltitle: pagename, blfilterredir: 'redirects' },
+      function() { TR.loading( container ); },
+      function( data ) {
+        TR.loaded( container );
+        var l = data.query.backlinks.length;
+        for ( var i = 0; i < l; i ++ ) {
+          var link = data.query.backlinks[i];
+          if ( link.title ) {
+            var ultitle = link.title.replace( ' ', '_' );
+            var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
+            var licontainer = $j( '<li><a href="' + baseuri + '&redirect=no" target="blank">' +
+              link.title + '</a> (<span class="methods" />)<span class="meta-title' + 
+              ( deep ? ' meta-needfix': '' ) + '">' + ultitle + '</span></li>' );
+            var methods = $j( 'span.methods', licontainer );
+            if ( deep ) {
+              var fixit = $j( '<a href="#">' + TR.msg.tabviewfixit + '</a>' ).click( TR.fixit );
+              methods.append( TR.msg.tabviewmulti + ': ' )
+                .append( fixit )
+                .append( $j( '<span class="gap">|</span>' ) );
+            }
+            methods.append( $j( '<a href="' + baseuri + '&action=edit" target="blank">' +
+              TR.msg.rediedit + '</a>' ) );
+            ulcontainer.append( licontainer );
+            TR.loadRedirectCore( link.title, licontainer, deep + 1 );
+          }
+        }
+        var desc = $j( 'p.desc', TR.tabs.view.cont );
+        if ( deep == 0 && l != 0 ) desc.text( TR.msg.tabviewdesc );
+        else if ( deep == 0 && l == 0 ) desc.text( TR.msg.tabviewnotfound );
+        else if ( deep
+          && $j( 'a.fixall', desc ).length == 0
+          && $j( '.meta-needfix', TR.tabs.view.cont ).length > 0 ) {
+          desc.append( '(<a class="fixall" href="#">' + TR.msg.tabviewfixall + '</a>)' );
+          $j( 'a.fixall', desc ).click( TR.fixall );
+        }
+      } ) );
+  },
+  findRedirect: function( pagename ) {
+    if ( !TR.tabs.create.loaded ) {
+      TR.tabs.create.loaded = true;
+    } else { return; }
+    var container = TR.tabs.create.cont;
+    var ulcontainer = $j( '<ul/>' ).appendTo( container );
+    var titles = Array();
+    var checkExists = function() {
+      var alltitles = titles.join( '|' ).replace( ' ', '_' );
+      if ( alltitles ) {
+        $j.ajax( TR.buildQuery( { action: 'query', prop: 'info', 'titles': alltitles }, null,
+          function( data ) {
+            TR.loaded( container );
+            var pages = data.query.pages;
+            var finded = false;
+            for ( var pageid in pages ) {
+              if ( pageid < 0 ) {
+                finded = true;
+                var title = pages[pageid].title;
+                var ultitle = title.replace( ' ', '_' );
+                var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
+                var licontainer = $j( '<li><a class="new" href="' + baseuri + '&action=edit&redlink=1" ' + 
+                  'target="blank">' + title + '</a> (<span class="methods"/>)<span class="meta-title>' + 
+                  ultitle + '</span></li>' ).appendTo( ulcontainer );
+                var createit = $j( '<a href="#">' + TR.msg.tabcreateit + '</a>' )
+                  .appendTo( $j( 'span.methods', licontainer ) )
+                  .click( TR.createit );
+              }
+            }
+            var desc = $j( 'p.desc', container );
+            if ( finded ) {
+              desc.text( TR.msg.tabcreatedesc );
+              desc.append( '(<a class="createall" href="#">' + TR.msg.tabcreateall + '</a>)' );
+              $j( 'a.createall', desc ).click( TR.createall );
+            } else {
+              desc.text( TR.msg.tabcreatenotfound );
+              $j( 'ul', container ).remove();
+            }
+          }
+        ) );
+      }
+    };
+    var pc = 0;
+    var l = TR.variants.length;
+    for ( var i = 0; i < l; i ++ ) {
+      $j.ajax( TR.buildQuery( { action: 'parse', page: pagename, prop: 'displaytitle', variant: TR.variants[i] },
+        function() { TR.loading( container ); },
+        function( data ) {
+          var title = data.parse.displaytitle;
+          if ( $j.inArray( title, titles ) == -1 ) {
+            titles.push( title );
+          }
+          pc ++;
+          if ( pc == l ) {
+            checkExists();
+          }
+        }
+      ) );
+    }
+  },
+  buildQuery: function( data, before, after ) {
+    var query = { url: wgScriptPath + '/api.php', dataType: 'json', type: 'POST' };
+    query.data = data;
+    query.data.format = 'json';
+    if ( before ) query.beforeSend = before;
+    if ( after ) query.success = after;
+    return query;
+  }
+}
+
+addOnloadHook( function() {
+  TR.button( TR.dialog );
+});
