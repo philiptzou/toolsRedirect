@@ -1,0 +1,27 @@
+div.dialog-redirect ul li.loading {
+  list-style-image:url('http://bits.wikimedia.org/w/extensions/UsabilityInitiative/images/wikiEditor/toolbar/loading-small.gif?45');
+}
+
+div.dialog-redirect .meta-title {
+  display:none;
+}
+
+div.dialog-redirect span.gap {
+  letter-spacing:2px;
+}
+
+div.dialog-redirect a:visited {
+  color:#0B0080;
+}
+
+div.dialog-redirect a {
+  color:#0645AD;
+}
+
+div.dialog-redirect a.new:visited {
+  color:#A55858;
+}
+
+div.dialog-redirect a.new {
+  color:#CC2200;
+}
