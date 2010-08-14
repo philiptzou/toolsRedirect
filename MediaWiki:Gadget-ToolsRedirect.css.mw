@@ -1,5 +1,8 @@
-div.dialog-redirect ul li.loading {
-  list-style-image:url('http://bits.wikimedia.org/w/extensions/UsabilityInitiative/images/wikiEditor/toolbar/loading-small.gif?45');
+div.dialog-redirect .loading {
+  background-image:url('http://bits.wikimedia.org/w/extensions/UsabilityInitiative/images/wikiEditor/toolbar/loading-small.gif?45');
+  background-repeat:no-repeat;
+  background-position:right center;
+  padding-right:18px;
 }
 
 div.dialog-redirect .meta-title {
@@ -7,7 +10,8 @@ div.dialog-redirect .meta-title {
 }
 
 div.dialog-redirect span.gap {
-  letter-spacing:2px;
+  padding-left:2px;
+  padding-right:2px;
 }
 
 div.dialog-redirect a:visited {
