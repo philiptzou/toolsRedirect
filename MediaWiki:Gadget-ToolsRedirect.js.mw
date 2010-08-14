@@ -86,7 +86,7 @@ var TR = {
         for( var pageid in pages ) {
           page = pages[pageid];
           $j.ajax( TR.buildQuery(
-            { action: 'edit', title: page.title, token: page.edittoken + '2',
+            { action: 'edit', title: page.title, token: page.edittoken,
               'text': text, 'summary': summary }, null,
             function() {
               f ++;
@@ -115,7 +115,7 @@ var TR = {
         if ( success ) desc.text( TR.msg['tab' + tabname + 'desc'] );
         else desc.text( TR.msg['tab' + tabname + 'notfound'] );
       } );
-      //tab.loaded = true;
+      tab.loaded = true;
     }
   },
   loading: function( container ) {
