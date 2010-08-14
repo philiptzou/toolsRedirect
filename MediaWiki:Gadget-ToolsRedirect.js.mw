@@ -285,7 +285,7 @@ var TR = {
               titles = [];
               var pages = data.query.pages;
               for ( var pageid in pages ) {
-                var title = page[pageid].title;
+                var title = pages[pageid].title;
                 if ( pageid < 0 && $j.inArray( title, excludes ) == -1 ) {
                   titles.push( title );
                 }
