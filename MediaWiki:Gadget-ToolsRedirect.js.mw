@@ -272,6 +272,7 @@ var TR = {
     var alltitles = [];
     var v = ['zh-hans', 'zh-hant'];
     var t = 0;
+    var excludes = [ '用字模式' ];
     for( var i = 0; i < 2; i ++ ) {
       $j.ajax( TR.buildQuery( { action: 'parse', text: titles, prop: 'text', variant: v[i] },
       null, function( data ) {
@@ -284,8 +285,9 @@ var TR = {
               titles = [];
               var pages = data.query.pages;
               for ( var pageid in pages ) {
-                if ( pageid < 0 ) {
-                  titles.push( pages[pageid].title );
+                var title = page[pageid].title;
+                if ( pageid < 0 && $j.inArray( title, excludes ) == -1 ) {
+                  titles.push( title );
                 }
               }
               callback( titles );
