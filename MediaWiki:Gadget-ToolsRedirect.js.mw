@@ -64,8 +64,8 @@ var TR = {
     var desc = $j( 'p.desc', TR.tabs.create.cont ).text( TR.msg.createloading );
     $j( 'p[class!=desc]', TR.tabs.create.cont ).remove();
     TR.loading( TR.tabs.create.cont );
-    TR.bulkEdit( pagenames, TR.msg.fixtext.replace( '$1', wgPageName ),
-      TR.msg.fixsummary, function() {
+    TR.bulkEdit( pagenames, TR.msg.createtext.replace( '$1', wgPageName ),
+      TR.msg.createsummary, function() {
         TR.loaded( TR.tabs.create.cont );
         TR.tabs.view.loaded = false;
         TR.loadCreate( true );
