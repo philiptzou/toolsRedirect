@@ -4,7 +4,7 @@ importScriptURI( /* 我为什么把这个注释掉？bits的jui版本没跟上tr
     + 'UsabilityInitiative/js/js2stopgap/jui.combined.min.js'*/'http://ajax.googleapis.com/ajax/libs/jqueryui/1.7/jquery-ui.min.js' );
 
 var msglang = 'zh-hans';
-if ( zh$j.inArray( wgUserVariant, ['zh-hant', 'zh-hk', 'zh-tw'] ) > -1 ) {
+if ( $j.inArray( wgUserVariant, ['zh-hant', 'zh-hk', 'zh-tw'] ) > -1 ) {
     msglang = 'zh-hant';
 }
 
