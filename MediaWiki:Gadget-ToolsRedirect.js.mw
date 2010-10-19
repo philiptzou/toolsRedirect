@@ -4,16 +4,16 @@ var TR = {
   tagselem: null,
   variants: ['zh-cn', 'zh-hk', 'zh-sg', 'zh-tw'],
   button: function( click ) {
-    var btn = jQuery( '<li id="ca-redirect">' + '<a title="' + TR.msg.btndesc +
+    var btn = zh$j( '<li id="ca-redirect">' + '<a title="' + TR.msg.btndesc +
       '"><span>' + TR.msg.btntitle + '</span></a></li>' );
     btn.click( click );
-    jQuery( 'li#ca-history' ).after( btn );
+    zh$j( 'li#ca-history' ).after( btn );
   },
   dialog: function() {
-    var dlg = jQuery( '<div class="dialog-redirect" title="' + TR.msg.dlgtitle + '"></div>' ).dialog( {
+    var dlg = zh$j( '<div class="dialog-redirect" title="' + TR.msg.dlgtitle + '"></div>' ).dialog( {
       bgiframe: true, resizable: false, modal: true, width: 600 } );
-    TR.tabselem = jQuery( '<div class="tab-redirect"></div>' ).appendTo( dlg );
-    TR.tagselem = jQuery( '<ul/>' ).appendTo( TR.tabselem );
+    TR.tabselem = zh$j( '<div class="tab-redirect"></div>' ).appendTo( dlg );
+    TR.tagselem = zh$j( '<ul/>' ).appendTo( TR.tabselem );
     TR.addTabs();
     TR.tabselem.tabs();
   },
@@ -30,9 +30,9 @@ var TR = {
     TR.loadView();
   },
   createTab: function( tabname, tabtitle, callback ) {
-    var tag = jQuery( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' );
-    var cont = jQuery( '<div id="tab-' + tabname + '"/>' );
-    jQuery( 'a', tag ).click(
+    var tag = zh$j( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' );
+    var cont = zh$j( '<div id="tab-' + tabname + '"/>' );
+    zh$j( 'a', tag ).click(
       function() {
         TR.tabselem.tabs( 'select', '#tab-' + tabname );
         callback();
@@ -50,8 +50,8 @@ var TR = {
     }
   },
   fix: function( pagenames ) {
-    var desc = jQuery( 'p.desc', TR.tabs.view.cont ).text( TR.msg.fixloading );
-    jQuery( 'p[class!=desc]', TR.tabs.view.cont ).remove();
+    var desc = zh$j( 'p.desc', TR.tabs.view.cont ).text( TR.msg.fixloading );
+    zh$j( 'p[class!=desc]', TR.tabs.view.cont ).remove();
     TR.loading( TR.tabs.view.cont );
     TR.bulkEdit( pagenames, TR.msg.fixtext.replace( '$1', wgPageName ),
       TR.msg.fixsummary, function() {
@@ -61,8 +61,8 @@ var TR = {
     );
   },
   create: function( pagenames ) {
-    var desc = jQuery( 'p.desc', TR.tabs.create.cont ).text( TR.msg.createloading );
-    jQuery( 'p[class!=desc]', TR.tabs.create.cont ).remove();
+    var desc = zh$j( 'p.desc', TR.tabs.create.cont ).text( TR.msg.createloading );
+    zh$j( 'p[class!=desc]', TR.tabs.create.cont ).remove();
     TR.loading( TR.tabs.create.cont );
     TR.bulkEdit( pagenames, TR.msg.createtext.replace( '$1', wgPageName ),
       TR.msg.createsummary, function() {
@@ -74,7 +74,7 @@ var TR = {
   },
   bulkEdit: function( titles, text, summary, callback ) {
     titles = titles.join( '|' );
-    jQuery.ajax( TR.buildQuery(
+    zh$j.ajax( TR.buildQuery(
       { action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' },
       null,
       function( data ) {
@@ -85,7 +85,7 @@ var TR = {
         }
         for( var pageid in pages ) {
           page = pages[pageid];
-          jQuery.ajax( TR.buildQuery(
+          zh$j.ajax( TR.buildQuery(
             { action: 'edit', title: page.title, token: page.edittoken,
               'text': text, 'summary': summary }, null,
             function() {
@@ -109,7 +109,7 @@ var TR = {
     if ( reload ) tab.loaded = false;
     if ( !tab.loaded ) {
       tab.cont.html( '' );
-      var desc = jQuery( '<p class="desc">' +
+      var desc = zh$j( '<p class="desc">' +
         TR.msg.rediloading + '</p>' ).appendTo( tab.cont );
       callback( function( success ) {
         if ( success ) desc.text( TR.msg['tab' + tabname + 'desc'] );
@@ -121,43 +121,43 @@ var TR = {
   loading: function( container ) {
     if ( container.attr( 'tagName' ).toLowerCase() == 'span' ) {
       container.addClass( 'loading' );
-    } else if ( jQuery( 'span.loading', container ).length == 0 ) {
-      jQuery( '<span class="loading">&nbsp;</span>' ).appendTo( container );
+    } else if ( zh$j( 'span.loading', container ).length == 0 ) {
+      zh$j( '<span class="loading">&nbsp;</span>' ).appendTo( container );
     }
   },
   loaded: function( container ) {
     if ( container.attr( 'tagName' ).toLowerCase() == 'span' ) {
       container.removeClass( 'loading' );
     } else {
-      jQuery( 'span.loading', container ).remove();
+      zh$j( 'span.loading', container ).remove();
     }
   },
   selectAll: function( cont ) {
-    jQuery( 'input[type=checkbox][disabled!=true]', cont )
+    zh$j( 'input[type=checkbox][disabled!=true]', cont )
       .attr( 'checked', true );
   },
   selectInverse: function( cont ) {
-    jQuery( 'input[type=checkbox][disabled!=true]', cont )
+    zh$j( 'input[type=checkbox][disabled!=true]', cont )
       .each( function() {
-        var e = jQuery( this );
+        var e = zh$j( this );
         e.attr( 'checked', !e.attr( 'checked' ) );
       } ); 
   },
   selectAction: function( cont, cb ) {
     var pagenames = [];
-    jQuery( 'input[type=checkbox][checked=true]', cont )
+    zh$j( 'input[type=checkbox][checked=true]', cont )
       .each( function() {
-        pagenames.push( jQuery( '.meta-title', jQuery( this ).parent() ).text() );
+        pagenames.push( zh$j( '.meta-title', zh$j( this ).parent() ).text() );
       } );
     if ( pagenames.length )
       cb( pagenames );
   },
   clickAction: function( cont, cb ) {
-    var pagename = jQuery( '.meta-title', cont ).text();
+    var pagename = zh$j( '.meta-title', cont ).text();
     cb( [pagename] );
   },
   buildLink: function( attr ) {
-    var a = jQuery( '<a href="' + attr.href + '" title="' + attr.title +
+    var a = zh$j( '<a href="' + attr.href + '" title="' + attr.title +
       '" target="blank">' + attr.title + '</a>' );
     if ( attr.click )
       a.click( attr.click );
@@ -166,7 +166,7 @@ var TR = {
     return a;
   },
   buildMethods: function( metd ) {
-    var cont = jQuery( '<span/>' );
+    var cont = zh$j( '<span/>' );
     var l = metd ? metd.length : 0;
     cont.append( l ? ' (' : '' );
     for ( var i = 0; i < l; i ++ ) {
@@ -178,8 +178,8 @@ var TR = {
     return cont;    
   },
   buildSelection: function( main, metd, mt, dsab ) {
-    var cont = jQuery( '<span/>' );
-    var sele = jQuery( '<input type="checkbox"/>' ).appendTo( cont );
+    var cont = zh$j( '<span/>' );
+    var sele = zh$j( '<input type="checkbox"/>' ).appendTo( cont );
     TR.buildLink( main).appendTo( cont );
     TR.buildMethods( metd ).appendTo( cont );
     cont.append( '<span class="meta-title">' + mt + '</span>' );
@@ -199,19 +199,19 @@ var TR = {
   },
   loadRedirect: function( pagename, container, deep, after ) {
     TR.loading( container );
-    var top = deep ? jQuery( '<dl/>' ).appendTo( container ) : container;
-    jQuery.ajax( TR.buildQuery(
+    var top = deep ? zh$j( '<dl/>' ).appendTo( container ) : container;
+    zh$j.ajax( TR.buildQuery(
       { action: 'query', list: 'backlinks', bltitle: pagename, blfilterredir: 'redirects' },
       null, function( data ) {
         TR.loaded( container );
         var l = data.query.backlinks.length;
-        var desc = jQuery( 'p.desc', TR.tabs.view.cont );
+        var desc = zh$j( 'p.desc', TR.tabs.view.cont );
         for ( var i = 0; i < l; i ++ ) {
           var link = data.query.backlinks[i];
           if ( link.title ) {
             var ultitle = link.title.replace( ' ', '_' );
             var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
-            var entry = ( deep ? jQuery( '<dd/>' ) : jQuery( '<p/>' ) ).appendTo( top );
+            var entry = ( deep ? zh$j( '<dd/>' ) : zh$j( '<p/>' ) ).appendTo( top );
             var methods = [ {href: baseuri + '&action=edit',
                              title: TR.msg.rediedit } ];
             if ( deep ) {
@@ -230,7 +230,7 @@ var TR = {
         }
         if ( after ) {
           after( l );
-        } else if ( l && jQuery( 'a', desc ).length == 0 ) {
+        } else if ( l && zh$j( 'a', desc ).length == 0 ) {
           TR.buildMethods(
             [ { href: '#',
                 title: TR.msg.selectall,
@@ -257,7 +257,7 @@ var TR = {
     var pc = 0;
     var l = TR.variants.length;
     for ( var i = 0; i < l; i ++ ) {
-      jQuery.ajax( TR.buildQuery( {action: 'parse', page: pagename, prop: 'displaytitle', variant: TR.variants[i] },
+      zh$j.ajax( TR.buildQuery( {action: 'parse', page: pagename, prop: 'displaytitle', variant: TR.variants[i] },
       null, function( data ) {
         titles.push( data.parse.displaytitle );
         pc ++;
@@ -274,19 +274,19 @@ var TR = {
     var t = 0;
     var excludes = [ '用字模式' ];
     for( var i = 0; i < 2; i ++ ) {
-      jQuery.ajax( TR.buildQuery( { action: 'parse', text: titles, prop: 'text', variant: v[i] },
+      zh$j.ajax( TR.buildQuery( { action: 'parse', text: titles, prop: 'text', variant: v[i] },
       null, function( data ) {
-        alltitles = alltitles.concat( jQuery( data.parse.text['*'] ).text().split( '|' ) );
+        alltitles = alltitles.concat( zh$j( data.parse.text['*'] ).text().split( '|' ) );
         t ++;
         if ( t == 2 ) {
           alltitles = alltitles.join( '|' );
-          jQuery.ajax( TR.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles }, null,
+          zh$j.ajax( TR.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles }, null,
             function( data ) {
               titles = [];
               var pages = data.query.pages;
               for ( var pageid in pages ) {
                 var title = pages[pageid].title;
-                if ( pageid < 0 && jQuery.inArray( title, excludes ) == -1 ) {
+                if ( pageid < 0 && zh$j.inArray( title, excludes ) == -1 ) {
                   titles.push( title );
                 }
               }
@@ -301,8 +301,8 @@ var TR = {
     var container = TR.tabs.create.cont;
     TR.loading( container );
     var titles = Array();
-    jQuery( 'div#bodyContent p b' ).each( function() {
-      titles.push( jQuery( this ).text() ); } );
+    zh$j( 'div#bodyContent p b' ).each( function() {
+      titles.push( zh$j( this ).text() ); } );
     TR.findVariants( pagename, titles, function( tt ) {
       TR.findNotExists( tt, function( t ) {
         TR.loaded( container );
@@ -311,7 +311,7 @@ var TR = {
           var title = t[i];
           var ultitle = title.replace( ' ', '_' );
           var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
-          var entry = jQuery( '<p/>' ).appendTo( container );
+          var entry = zh$j( '<p/>' ).appendTo( container );
           TR.buildSelection(
             { href: baseuri + '&action=edit&redlink=1',
               'title': title,
@@ -324,7 +324,7 @@ var TR = {
               } ],
             ultitle, false ).appendTo( entry );
         }
-        var desc = jQuery( 'p.desc', container );
+        var desc = zh$j( 'p.desc', container );
         if ( after )
           after( l );
         if ( l ) {
