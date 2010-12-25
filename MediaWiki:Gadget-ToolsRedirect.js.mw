@@ -276,7 +276,7 @@ var TR = {
     for( var i = 0; i < 2; i ++ ) {
       zh$j.ajax( TR.buildQuery( { action: 'parse', text: titles, prop: 'text', variant: v[i] },
       null, function( data ) {
-        alltitles = alltitles.concat( zh$j( 'p', zh$j( data.parse.text['*'] ) ).text().split( '|' ) );
+        alltitles = alltitles.concat( zh$j( data.parse.text['*'] ).text().replace( /(^\s*|\s*$)/g, '' ).split( '|' ) );
         t ++;
         if ( t == 2 ) {
           alltitles = alltitles.join( '|' );
