@@ -1,12 +1,367 @@
-importStylesheetURI( 'http://bits.wikimedia.org/w/extensions/UsabilityInitiative/css/vector/jquery-ui-1.7.2.css' );
-importStylesheet( 'User:PhiLiP/ToolsRedirect/tools-redirect.css' );
-importScriptURI( /* 我为什么把这个注释掉？bits的jui版本没跟上trunk，我要用ui.tabs它没有 - - 'http://bits.wikimedia.org/w/extensions/'
-    + 'UsabilityInitiative/js/js2stopgap/jui.combined.min.js'*/'http://ajax.googleapis.com/ajax/libs/jqueryui/1.7/jquery-ui.min.js' );
-
-var msglang = 'zh-hans';
-if ( $j.inArray( wgUserVariant, ['zh-hant', 'zh-hk', 'zh-tw'] ) > -1 ) {
-    msglang = 'zh-hant';
+var TR = {
+  msg: tools_redirect_msg,
+  tabselem: null,
+  tagselem: null,
+  variants: ['zh-cn', 'zh-hk', 'zh-sg', 'zh-tw'],
+  button: function( click ) {
+    var btn = zh$j( '<li id="ca-redirect">' + '<a title="' + TR.msg.btndesc +
+      '"><span>' + TR.msg.btntitle + '</span></a></li>' );
+    btn.click( click );
+    zh$j( 'li#ca-history' ).after( btn );
+  },
+  dialog: function() {
+    var dlg = zh$j( '<div class="dialog-redirect" title="' + TR.msg.dlgtitle + '"></div>' ).dialog( {
+      bgiframe: true, resizable: false, modal: true, width: 600 } );
+    TR.tabselem = zh$j( '<div class="tab-redirect"></div>' ).appendTo( dlg );
+    TR.tagselem = zh$j( '<ul/>' ).appendTo( TR.tabselem );
+    TR.addTabs();
+    TR.tabselem.tabs();
+  },
+  addTabs: function() {
+    for ( var kname in TR.tabs ) {
+      if ( typeof TR.tabs[kname] === 'function' ) {
+        TR.tabs[kname] = TR.tabs[kname]();
+      }
+      var tab = TR.tabs[kname];
+      TR.tagselem.append( tab.tag );
+      TR.tabselem.append( tab.cont );
+    }
+    // default tab, autoload when dialog initiate
+    TR.loadView();
+  },
+  createTab: function( tabname, tabtitle, callback ) {
+    var tag = zh$j( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' );
+    var cont = zh$j( '<div id="tab-' + tabname + '"/>' );
+    zh$j( 'a', tag ).click(
+      function() {
+        TR.tabselem.tabs( 'select', '#tab-' + tabname );
+        callback();
+        return false;
+      }
+    );
+    return { 'tag': tag, 'cont': cont, loaded: false };
+  },
+  tabs: {
+    view: function() {
+      return TR.createTab( 'view', TR.msg.tabviewtitle, TR.loadView );
+    },
+    create: function() {
+      return TR.createTab( 'create', TR.msg.tabcreatetitle, TR.loadCreate );
+    }
+  },
+  fix: function( pagenames ) {
+    var desc = zh$j( 'p.desc', TR.tabs.view.cont ).text( TR.msg.fixloading );
+    zh$j( 'p[class!=desc]', TR.tabs.view.cont ).remove();
+    TR.loading( TR.tabs.view.cont );
+    TR.bulkEdit( pagenames, TR.msg.fixtext.replace( '$1', wgPageName ),
+      TR.msg.fixsummary, function() {
+        TR.loaded( TR.tabs.view.cont );
+        TR.loadView( true );
+      }
+    );
+  },
+  create: function( pagenames ) {
+    var desc = zh$j( 'p.desc', TR.tabs.create.cont ).text( TR.msg.createloading );
+    zh$j( 'p[class!=desc]', TR.tabs.create.cont ).remove();
+    TR.loading( TR.tabs.create.cont );
+    TR.bulkEdit( pagenames, TR.msg.createtext.replace( '$1', wgPageName ),
+      TR.msg.createsummary, function() {
+        TR.loaded( TR.tabs.create.cont );
+        TR.tabs.view.loaded = false;
+        TR.loadCreate( true );
+      }
+    );
+  },
+  bulkEdit: function( titles, text, summary, callback ) {
+    titles = titles.join( '|' );
+    zh$j.ajax( TR.buildQuery(
+      { action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' },
+      null,
+      function( data ) {
+        var pages = data.query.pages;
+        var l = 0; var f = 0;
+        for( var pageid in pages ) {
+          l ++;
+        }
+        for( var pageid in pages ) {
+          page = pages[pageid];
+          zh$j.ajax( TR.buildQuery(
+            { action: 'edit', title: page.title, token: page.edittoken,
+              'text': text, 'summary': summary }, null,
+            function() {
+              f ++;
+              if ( l == f ) {
+                callback();
+              }
+            }
+          ) );
+        }
+      }
+    ) );
+  },
+  reloadTabCont: function( tabname, callback ) {
+    var tab = TR.tabs[tabname];
+    tab.loaded = false;
+    TR.loadTabCont( tabname, callback );
+  },
+  loadTabCont: function( tabname, callback, reload ) {
+    var tab = TR.tabs[tabname];
+    if ( reload ) tab.loaded = false;
+    if ( !tab.loaded ) {
+      tab.cont.html( '' );
+      var desc = zh$j( '<p class="desc">' +
+        TR.msg.rediloading + '</p>' ).appendTo( tab.cont );
+      callback( function( success ) {
+        if ( success ) desc.text( TR.msg['tab' + tabname + 'desc'] );
+        else desc.text( TR.msg['tab' + tabname + 'notfound'] );
+      } );
+      tab.loaded = true;
+    }
+  },
+  loading: function( container ) {
+    if ( container.attr( 'tagName' ).toLowerCase() == 'span' ) {
+      container.addClass( 'loading' );
+    } else if ( zh$j( 'span.loading', container ).length == 0 ) {
+      zh$j( '<span class="loading">&nbsp;</span>' ).appendTo( container );
+    }
+  },
+  loaded: function( container ) {
+    if ( container.attr( 'tagName' ).toLowerCase() == 'span' ) {
+      container.removeClass( 'loading' );
+    } else {
+      zh$j( 'span.loading', container ).remove();
+    }
+  },
+  selectAll: function( cont ) {
+    zh$j( 'input[type=checkbox][disabled!=true]', cont )
+      .attr( 'checked', true );
+  },
+  selectInverse: function( cont ) {
+    zh$j( 'input[type=checkbox][disabled!=true]', cont )
+      .each( function() {
+        var e = zh$j( this );
+        e.attr( 'checked', !e.attr( 'checked' ) );
+      } ); 
+  },
+  selectAction: function( cont, cb ) {
+    var pagenames = [];
+    zh$j( 'input[type=checkbox][checked=true]', cont )
+      .each( function() {
+        pagenames.push( zh$j( '.meta-title', zh$j( this ).parent() ).text() );
+      } );
+    if ( pagenames.length )
+      cb( pagenames );
+  },
+  clickAction: function( cont, cb ) {
+    var pagename = zh$j( '.meta-title', cont ).text();
+    cb( [pagename] );
+  },
+  buildLink: function( attr ) {
+    var a = zh$j( '<a href="' + attr.href + '" title="' + attr.title +
+      '" target="blank">' + attr.title + '</a>' );
+    if ( attr.click )
+      a.click( attr.click );
+    if ( attr.classname )
+      a.addClass( attr.classname );
+    return a;
+  },
+  buildMethods: function( metd ) {
+    var cont = zh$j( '<span/>' );
+    var l = metd ? metd.length : 0;
+    cont.append( l ? ' (' : '' );
+    for ( var i = 0; i < l; i ++ ) {
+      TR.buildLink( metd[i] ).appendTo( cont );
+      if ( i + 1 < l )
+        cont.append( '<span class="gap">|</span>' );
+    }
+    cont.append( l ? ')' : '' );
+    return cont;    
+  },
+  buildSelection: function( main, metd, mt, dsab ) {
+    var cont = zh$j( '<span/>' );
+    var sele = zh$j( '<input type="checkbox"/>' ).appendTo( cont );
+    TR.buildLink( main).appendTo( cont );
+    TR.buildMethods( metd ).appendTo( cont );
+    cont.append( '<span class="meta-title">' + mt + '</span>' );
+    if ( dsab )
+      sele.attr( 'disabled', true );
+    return cont;
+  },
+  loadView: function( reload ) {
+    TR.loadTabCont( 'view', function( after ) {
+      TR.loadRedirect( wgPageName, TR.tabs.view.cont, 0, after );
+    }, reload );
+  },
+  loadCreate: function( reload ) {
+    TR.loadTabCont( 'create', function( after ) {
+      TR.findRedirect( wgPageName, after );
+    }, reload );
+  },
+  loadRedirect: function( pagename, container, deep, after ) {
+    TR.loading( container );
+    var top = deep ? zh$j( '<dl/>' ).appendTo( container ) : container;
+    zh$j.ajax( TR.buildQuery(
+      { action: 'query', list: 'backlinks', bltitle: pagename, blfilterredir: 'redirects' },
+      null, function( data ) {
+        TR.loaded( container );
+        var l = data.query.backlinks.length;
+        var desc = zh$j( 'p.desc', TR.tabs.view.cont );
+        for ( var i = 0; i < l; i ++ ) {
+          var link = data.query.backlinks[i];
+          if ( link.title ) {
+            var ultitle = link.title.replace( ' ', '_' );
+            var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
+            var entry = ( deep ? zh$j( '<dd/>' ) : zh$j( '<p/>' ) ).appendTo( top );
+            var methods = [ {href: baseuri + '&action=edit',
+                             title: TR.msg.rediedit } ];
+            if ( deep ) {
+              methods.push(
+                { href: '#',
+                  title: TR.msg.tabviewfix,
+                  click: function() {
+                    TR.clickAction( entry, TR.fix );
+                    return false; }
+                } );
+            }
+            TR.buildSelection( { href: baseuri + '&redirect=no', title: link.title },
+              methods, ultitle, !deep ).appendTo( entry );
+            TR.loadRedirect( link.title, entry, deep + 1 );
+          }
+        }
+        if ( after ) {
+          after( l );
+        } else if ( l && zh$j( 'a', desc ).length == 0 ) {
+          TR.buildMethods(
+            [ { href: '#',
+                title: TR.msg.selectall,
+                click: function() {
+                  TR.selectAll( TR.tabs.view.cont );
+                  return false; }
+              },
+              { href: '#',
+                title: TR.msg.selectinverse,
+                click: function() {
+                  TR.selectInverse( TR.tabs.view.cont );
+                  return false; }
+              },
+              { href: '#',
+                title: TR.msg.tabviewfix,
+                click: function() { 
+                  TR.selectAction( TR.tabs.view.cont, TR.fix );
+                  return false; }
+              } ] ).appendTo( desc );
+        }
+      } ) );
+  },
+  findVariants: function( pagename, titles, callback ) {
+    var pc = 0;
+    var l = TR.variants.length;
+    for ( var i = 0; i < l; i ++ ) {
+      zh$j.ajax( TR.buildQuery( {action: 'parse', page: pagename, prop: 'displaytitle', variant: TR.variants[i] },
+      null, function( data ) {
+        titles.push( data.parse.displaytitle );
+        pc ++;
+        if ( pc == l ) {
+          callback( titles );
+        }
+      } ) );
+    }
+  },
+  findNotExists: function( titles, callback ) {
+    var titles = titles.join('|');
+    var alltitles = [];
+    var v = ['zh-hans', 'zh-hant'];
+    var t = 0;
+    var excludes = [ '用字模式' ];
+    for( var i = 0; i < 2; i ++ ) {
+      zh$j.ajax( TR.buildQuery( { action: 'parse', text: titles, prop: 'text', variant: v[i] },
+      null, function( data ) {
+        alltitles = alltitles.concat( zh$j( 'p', data.parse.text['*'] ).text().split( '|' ) );
+        t ++;
+        if ( t == 2 ) {
+          alltitles = alltitles.join( '|' );
+          zh$j.ajax( TR.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles }, null,
+            function( data ) {
+              titles = [];
+              var pages = data.query.pages;
+              for ( var pageid in pages ) {
+                var title = pages[pageid].title;
+                if ( pageid < 0 && zh$j.inArray( title, excludes ) == -1 ) {
+                  titles.push( title );
+                }
+              }
+              callback( titles );
+            }
+          ) );
+        }
+      } ) );
+    }
+  },
+  findRedirect: function( pagename, after ) {
+    var container = TR.tabs.create.cont;
+    TR.loading( container );
+    var titles = Array();
+    zh$j( 'div#bodyContent p b' ).each( function() {
+      titles.push( zh$j( this ).text() ); } );
+    TR.findVariants( pagename, titles, function( tt ) {
+      TR.findNotExists( tt, function( t ) {
+        TR.loaded( container );
+        l = t.length;
+        for ( var i = 0; i < l; i ++ ) {
+          var title = t[i];
+          var ultitle = title.replace( ' ', '_' );
+          var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
+          var entry = zh$j( '<p/>' ).appendTo( container );
+          TR.buildSelection(
+            { href: baseuri + '&action=edit&redlink=1',
+              'title': title,
+              classname: 'new' },
+            [ { href: '#',
+                title: TR.msg.tabcreatetitle,
+                click: function() {
+                    TR.clickAction( entry, TR.create );
+                    return false; }
+              } ],
+            ultitle, false ).appendTo( entry );
+        }
+        var desc = zh$j( 'p.desc', container );
+        if ( after )
+          after( l );
+        if ( l ) {
+          TR.buildMethods( 
+            [ { href: '#',
+                title: TR.msg.selectall,
+                click: function() {
+                  TR.selectAll( container );
+                  return false; }
+              },
+              { href: '#',
+                title: TR.msg.selectinverse,
+                click: function() {
+                  TR.selectInverse( container );
+                  return false; }
+              },
+              { href: '#',
+                title: TR.msg.tabcreatetitle,
+                click: function() { 
+                  TR.selectAction( container, TR.create );
+                  return false; }
+              }
+            ] ).appendTo( desc );
+          }
+      } );
+    } );
+  },
+  buildQuery: function( data, before, after ) {
+    var query = { url: wgScriptPath + '/api.php', dataType: 'json', type: 'POST' };
+    query.data = data;
+    query.data.format = 'json';
+    if ( before ) query.beforeSend = before;
+    if ( after ) query.success = after;
+    return query;
+  }
 }
 
-importScript( 'User:PhiLiP/ToolsRedirect/tools-redirect-msg-' + msglang + '.js' );
-importScript( 'User:PhiLiP/ToolsRedirect/tools-redirect.js' );
+addOnloadHook( function() {
+  TR.button( TR.dialog );
+});
