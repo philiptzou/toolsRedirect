@@ -3,6 +3,7 @@ mw.loader.using( ['jquery.ui.dialog', 'jquery.ui.tabs'], function() {
     if ( 'zh-hant|zh-hk|zh-tw'.indexOf( wgUserVariant ) > -1 ) {
         msglang = 'zh-hant';
     }
+    importStylesheet( 'User:PhiLiP/ToolsRedirect/tools-redirect.css' ); 
     importScript( 'User:PhiLiP/ToolsRedirect/tools-redirect-msg-' + msglang + '.js' );
     importScript( 'User:PhiLiP/ToolsRedirect/tools-redirect.js' );
 } );
