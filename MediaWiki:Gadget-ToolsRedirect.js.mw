@@ -1,4 +1,8 @@
-mw.loader.using( ['jquery.ui.dialog', 'jquery.ui.tabs'], function() {
+(function() {
+function autoload() {
+    if ( !( jquery.fn.dialog && jquery.fn.tabs ) ) {
+        return;
+    }
     var msglang = 'zh-hans';
     if ( 'zh-hant|zh-hk|zh-tw'.indexOf( wgUserVariant ) > -1 ) {
         msglang = 'zh-hant';
@@ -7,4 +11,6 @@ mw.loader.using( ['jquery.ui.dialog', 'jquery.ui.tabs'], function() {
     importScriptCallback( 'User:PhiLiP/ToolsRedirect/tools-redirect-msg-' + msglang + '.js', function() {
         importScript( 'User:PhiLiP/ToolsRedirect/tools-redirect.js' );
     } );
-} );
+}
+mw.loader.using( ['jquery.ui.dialog', 'jquery.ui.tabs'], autoload, autoload );
+})();
