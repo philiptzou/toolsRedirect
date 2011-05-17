@@ -1,6 +1,6 @@
 (function() {
 function autoload() {
-    if ( !( jquery.fn.dialog && jquery.fn.tabs ) ) {
+    if ( !( jQuery.fn.dialog && jQuery.fn.tabs ) ) {
         return;
     }
     var msglang = 'zh-hans';
