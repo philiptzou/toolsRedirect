@@ -119,7 +119,7 @@ var TR = {
     }
   },
   loading: function( container ) {
-    if ( container.prop( 'tagName' ) && container.prop( 'tagName' ).toLowerCase() == 'span' ) {
+    if ( container.prop( 'tagName' ).toLowerCase() == 'span' ) {
       container.addClass( 'loading' );
     } else if ( jQuery( 'span.loading', container ).length == 0 ) {
       jQuery( '<span class="loading">&nbsp;</span>' ).appendTo( container );
