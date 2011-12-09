@@ -201,7 +201,7 @@ var TR = {
     TR.loading( container );
     var top = deep ? jQuery( '<dl/>' ).appendTo( container ) : container;
     jQuery.ajax( TR.buildQuery(
-      { action: 'query', list: 'backlinks', bltitle: pagename, blfilterredir: 'redirects' },
+      { action: 'query', list: 'backlinks', bltitle: pagename, bllimit: 'max', blfilterredir: 'redirects' },
       null, function( data ) {
         TR.loaded( container );
         var l = data.query.backlinks.length;
