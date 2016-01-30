@@ -121,7 +121,7 @@ var TR = {
   loading: function( container ) {
     if ( container.prop( 'tagName' ).toLowerCase() == 'span' ) {
       container.addClass( 'mw-ajax-loader' );
-    } else if ( jQuery( 'span.mw-ajax-loader', container ).length == 0 ) {
+    } else if ( jQuery( 'span.mw-ajax-loader', container ).length === 0 ) {
       jQuery( '<span class="mw-ajax-loader"></span>' ).appendTo( container );
     }
   },
@@ -165,17 +165,18 @@ var TR = {
       a.addClass( attr.classname );
     return a;
   },
-  buildMethods: function( metd ) {
-    var cont = jQuery( '<span/>' );
-    var l = metd ? metd.length : 0;
-    cont.append( l ? ' (' : '' );
-    for ( var i = 0; i < l; i ++ ) {
-      TR.buildLink( metd[i] ).appendTo( cont );
-      if ( i + 1 < l )
-        cont.append( '<span class="gap">|</span>' );
+  buildMethods: function( methods ) {
+    var $container = jQuery( '<span/>' ),
+        methodLength = methods.length;
+    $container.append( methodLength ? ' (' : '' );
+    jQuery.each( methods, function( idx, method ) {
+      TR.buildLink( method ).appendTo( $container );
+      if ( idx + 1 < methodLength ) {
+        $container.append( '<span class="gap">|</span>' );
+      }
     }
-    cont.append( l ? ')' : '' );
-    return cont;    
+    $container.append( methodLength ? ')' : '' );
+    return $container;    
   },
   buildSelection: function( main, metd, mt, dsab ) {
     var cont = jQuery( '<span/>' );
