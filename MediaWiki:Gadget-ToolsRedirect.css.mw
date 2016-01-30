@@ -1,7 +1,4 @@
-div.dialog-redirect .loading {
-  background-image:url('http://bits.wikimedia.org/w/extensions/UsabilityInitiative/images/wikiEditor/toolbar/loading-small.gif?45');
-  background-repeat:no-repeat;
-  background-position:right center;
+div.dialog-redirect .mw-ajax-loader {
   padding-right:18px;
 }
 
