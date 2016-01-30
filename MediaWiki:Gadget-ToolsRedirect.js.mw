@@ -174,7 +174,7 @@ var TR = {
       if ( idx + 1 < methodLength ) {
         $container.append( '<span class="gap">|</span>' );
       }
-    }
+    } );
     $container.append( methodLength ? ')' : '' );
     return $container;    
   },
