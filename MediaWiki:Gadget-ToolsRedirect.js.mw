@@ -219,9 +219,9 @@ var TR = {
               methods.push(
                 { href: '#',
                   title: TR.msg.tabviewfix,
-                  click: function() {
-                    TR.clickAction( entry, TR.fix );
-                    return false; }
+                  click: function( evt ) {
+                  	evt.preventDefault();
+                    TR.clickAction( entry, TR.fix ); }
                 } );
             }
             TR.buildSelection( { href: baseuri + '&redirect=no', title: link.title },
@@ -235,21 +235,21 @@ var TR = {
           TR.buildMethods(
             [ { href: '#',
                 title: TR.msg.selectall,
-                click: function() {
-                  TR.selectAll( TR.tabs.view.cont );
-                  return false; }
+                click: function( evt ) {
+                  evt.preventDefault();
+                  TR.selectAll( TR.tabs.view.cont ); }
               },
               { href: '#',
                 title: TR.msg.selectinverse,
-                click: function() {
-                  TR.selectInverse( TR.tabs.view.cont );
-                  return false; }
+                click: function( evt ) {
+                  evt.preventDefault();
+                  TR.selectInverse( TR.tabs.view.cont ); }
               },
               { href: '#',
                 title: TR.msg.tabviewfix,
-                click: function() { 
-                  TR.selectAction( TR.tabs.view.cont, TR.fix );
-                  return false; }
+                click: function( evt ) {
+                  evt.preventDefault();
+                  TR.selectAction( TR.tabs.view.cont, TR.fix ); }
               } ] ).appendTo( desc );
         }
       } ) );
@@ -319,9 +319,9 @@ var TR = {
               classname: 'new' },
             [ { href: '#',
                 title: TR.msg.tabcreatetitle,
-                click: function() {
-                    TR.clickAction( entry, TR.create );
-                    return false; }
+                click: function( evt ) {
+                  evt.preventDefault();
+                  TR.clickAction( entry, TR.create ); }
               } ],
             ultitle, false ).appendTo( entry );
         }
@@ -332,21 +332,21 @@ var TR = {
           TR.buildMethods( 
             [ { href: '#',
                 title: TR.msg.selectall,
-                click: function() {
-                  TR.selectAll( container );
-                  return false; }
+                click: function( evt ) {
+                  evt.preventDefault();
+                  TR.selectAll( container ); }
               },
               { href: '#',
                 title: TR.msg.selectinverse,
-                click: function() {
-                  TR.selectInverse( container );
-                  return false; }
+                click: function( evt ) {
+                  evt.preventDefault();
+                  TR.selectInverse( container ); }
               },
               { href: '#',
                 title: TR.msg.tabcreatetitle,
-                click: function() { 
-                  TR.selectAction( container, TR.create );
-                  return false; }
+                click: function( evt ) {
+                  evt.preventDefault();
+                  TR.selectAction( container, TR.create ); }
               }
             ] ).appendTo( desc );
           }
