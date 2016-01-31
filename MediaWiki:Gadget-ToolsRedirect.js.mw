@@ -22,8 +22,8 @@ var TR = {
   },
   addTabs: function() {
     for ( var kname in this.tabs ) {
-      if ( typeof this.tabs[kname] === 'function' ) {
-        this.tabs[kname] = this.tabs[kname]();
+      if ( this.tabs[kname] === null ) {
+        this.tabs[kname] = this['_initTab' + kname[0].charAt(0).toUpperCase() + kname.slice(1)]();
       }
       var tab = this.tabs[kname];
       this.tagselem.append( tab.tag );
@@ -45,15 +45,15 @@ var TR = {
     );
     return { 'tag': tag, 'cont': cont, loaded: false };
   },
-  _tabView: function() {
+  _initTabView: function() {
     return this.createTab( 'view', this.msg.tabviewtitle, this.loadView );
   },
-  _tabCreate: function() {
+  _initTabCreate: function() {
     return this.createTab( 'create', this.msg.tabcreatetitle, this.loadCreate );
   },
   tabs: {
-    view: TR._tabView,
-    create: TR._tabView
+    view: null,
+    create: null
   },
   fix: function( pagenames ) {
     var self = this,
