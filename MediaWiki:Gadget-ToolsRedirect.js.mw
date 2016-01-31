@@ -252,7 +252,7 @@ function _initToolsRedirect() {
 				}
 
 				jQuery.ajax( this.buildQuery(
-					{ action: 'query', prop: 'redirects', title: pagename, rdlimit: 'max' } ) )
+					{ action: 'query', prop: 'redirects', titles: pagename, rdlimit: 'max' } ) )
 				.done( function( data ) {
 					self.loaded( container );
 					var has_redirect = false,
