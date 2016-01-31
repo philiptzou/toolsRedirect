@@ -6,17 +6,24 @@ window.TR = {
   tabselem: null,
   tagselem: null,
   variants: ['zh-cn', 'zh-hk', 'zh-sg', 'zh-tw'],
-  button: function( click ) {
-    var btn = jQuery( '<li id="ca-redirect">' + '<span><a title="' + this.msg.btndesc +
-      '">' + this.msg.btntitle + '</a></span></li>' );
-    btn.click( click );
+  init: function() {
+    var self = this,
+        btn = jQuery( '<li id="ca-redirect"><span><a title="' +
+                      this.msg.btndesc + '">' + this.msg.btntitle +
+                      '</a></span></li>' );
+    btn.click( function( evt ) {
+      evt.preventDefault();
+      this.dialog();
+    } );
     jQuery( 'li#ca-history' ).after( btn );
   },
   dialog: function() {
-    var dlg = jQuery( '<div class="dialog-redirect" title="' + this.msg.dlgtitle + '"></div>' ).dialog( {
+    var dlg = jQuery( '<div class="dialog-redirect" title="' +
+                      this.msg.dlgtitle + '">' )
+    .dialog( {
       bgiframe: true, resizable: false, modal: true, width: 600 } );
-    this.tabselem = jQuery( '<div class="tab-redirect"></div>' ).appendTo( dlg );
-    this.tagselem = jQuery( '<ul/>' ).appendTo( this.tabselem );
+    this.tabselem = jQuery( '<div class="tab-redirect">' ).appendTo( dlg );
+    this.tagselem = jQuery( '<ul>' ).appendTo( this.tabselem );
     this.addTabs();
     this.tabselem.tabs();
   },
@@ -190,8 +197,9 @@ window.TR = {
     this.buildLink( main).appendTo( cont );
     this.buildMethods( metd ).appendTo( cont );
     cont.append( '<span class="meta-title">' + mt + '</span>' );
-    if ( dsab )
+    if ( dsab ) {
       sele.attr( 'disabled', true );
+    }
     return cont;
   },
   loadView: function( reload ) {
@@ -201,7 +209,7 @@ window.TR = {
     }, reload );
   },
   loadCreate: function( reload ) {
-  	var self = this;
+    var self = this;
     this.loadTabCont( 'create', function( after ) {
       self.findRedirect( wgPageName, after );
     }, reload );
@@ -229,7 +237,7 @@ window.TR = {
                 { href: '#',
                   title: self.msg.tabviewfix,
                   click: function( evt ) {
-                  	evt.preventDefault();
+                    evt.preventDefault();
                     self.clickAction( entry, self.fix ); }
                 } );
             }
