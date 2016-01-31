@@ -1,0 +1,2 @@
+window.TR = window.TR || {};
+TR.optionFindBoldsAsTitles = true;
