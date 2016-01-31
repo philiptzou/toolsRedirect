@@ -119,22 +119,20 @@ function _initToolsRedirect() {
 				var self = this;
 				titles = titles.join( '|' );
 				jQuery.ajax( this.buildQuery(
-					{ action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' },
-					null,
-					function( data ) {
-						var deferreds = [];
-						jQuery.each( data.query.pages, function( idx, page ) {
-							deferreds.push( jQuery.ajax(
-								self.buildQuery( {
-									action: 'edit', title: page.title, token: page.edittoken,
-									'text': text, 'summary': summary } )
-							) );
-						});
-						jQuery.when.apply( jQuery, deferreds ).done( function() {
-							callback.call( self );
-						} );
-					}
-				) );
+					{ action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' } ) )
+				.done( function( data ) {
+					var deferreds = [];
+					jQuery.each( data.query.pages, function( idx, page ) {
+						deferreds.push( jQuery.ajax(
+							self.buildQuery( {
+								action: 'edit', title: page.title, token: page.edittoken,
+								'text': text, 'summary': summary } )
+						) );
+					});
+					jQuery.when.apply( jQuery, deferreds ).done( function() {
+						callback.call( self );
+					} );
+				} );
 			},
 			reloadTabCont: function( tabname, callback ) {
 				var tab = this.tabs[tabname];
@@ -347,24 +345,21 @@ function _initToolsRedirect() {
 
 				jQuery.when.apply( jQuery, deferreds ).done( function() {
 					jQuery.each( arguments, function() {
-						alltitles = alltitles.concat( jQuery( data.parse.text['*'] )
+						alltitles = alltitles.concat( jQuery( this.parse.text['*'] )
 													  .text().replace( /(^\s*|\s*$)/g, '' ).split( '|' ) );
 					} );
 					alltitles = alltitles.join( '|' );
-					jQuery.ajax( self.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles }, null,
-						function( data ) {
-							titles = [];
-							var pages = data.query.pages;
-							for ( var pageid in pages ) {
-								var title = pages[pageid].title;
-								if ( pageid < 0 && jQuery.inArray( title, excludes ) == -1 ) {
-									titles.push( title );
-								}
+					jQuery.ajax( self.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles } ) )
+					.done( function( data ) {
+						titles = [];
+						jQuery.each( data.query.pages, function( idx, page ) {
+							var title = page.title;
+							if ( pageid < 0 && jQuery.inArray( title, excludes ) == -1 ) {
+								titles.push( title );
 							}
-							callback.call( self, titles );
-						}
-					) );
-
+						} );
+						callback.call( self, titles );
+					} );
 				} );
 
 			},
@@ -433,12 +428,10 @@ function _initToolsRedirect() {
 					} );
 				} );
 			},
-			buildQuery: function( data, before, after ) {
+			buildQuery: function( data ) {
 				var query = { url: scriptPath + '/api.php', dataType: 'json', type: 'POST' };
 				query.data = data;
 				query.data.format = 'json';
-				if ( before ) query.beforeSend = before;
-				if ( after ) query.success = after;
 				return query;
 			}
 		} );
