@@ -358,6 +358,7 @@ function _initToolsRedirect() {
 					jQuery( 'div#mw-content-text > p > b' ).each( function() {
 						pagenames.push( jQuery( this ).text() ); } );
 				}
+				console.log( pagenames );
 				this.findVariants( pagenames, function( tt ) {
 					self.findNotExists( tt, function( t ) {
 						self.loaded( container );
