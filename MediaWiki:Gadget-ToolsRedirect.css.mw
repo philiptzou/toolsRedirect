@@ -1,28 +1,26 @@
-div.dialog-redirect .mw-ajax-loader {
-  top: 0;
-}
+/* vim: set noexpandtab ft=css ts=4 sw=4: */
 
-div.dialog-redirect .meta-title {
-  display:none;
+div.dialog-redirect .mw-ajax-loader {
+	top: 0;
 }
 
 div.dialog-redirect span.gap {
-  padding-left:2px;
-  padding-right:2px;
+	padding-left:2px;
+	padding-right:2px;
 }
 
 div.dialog-redirect a:visited {
-  color:#0B0080;
+	color:#0B0080;
 }
 
 div.dialog-redirect a {
-  color:#0645AD;
+	color:#0645AD;
 }
 
 div.dialog-redirect a.new:visited {
-  color:#A55858;
+	color:#A55858;
 }
 
 div.dialog-redirect a.new {
-  color:#CC2200;
+	color:#CC2200;
 }
