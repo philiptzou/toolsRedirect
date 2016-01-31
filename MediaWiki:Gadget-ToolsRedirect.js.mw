@@ -13,7 +13,7 @@ window.TR = {
                       '</a></span></li>' );
     btn.click( function( evt ) {
       evt.preventDefault();
-      this.dialog();
+      self.dialog();
     } );
     jQuery( 'li#ca-history' ).after( btn );
   },
