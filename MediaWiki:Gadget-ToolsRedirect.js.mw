@@ -71,9 +71,9 @@ window.TR = {
       pagenames,
       this.msg.fixtext.replace( '$1', wgPageName ),
       this.msg.fixsummary, function() {
-        self.loaded( self.tabs.view.cont );
         // delay load before the asynchronous tasks on server finished
         setTimeout( function() {
+          self.loaded( self.tabs.view.cont );
           self.loadView( true );
         }, 1500 );
       }
@@ -88,10 +88,10 @@ window.TR = {
       pagenames,
       this.msg.createtext.replace( '$1', wgPageName ),
       this.msg.createsummary.replace( '$1', wgPageName ), function() {
-        self.loaded( self.tabs.create.cont );
-        self.tabs.view.loaded = false;
         // delay load before the asynchronous tasks on server finished
         setTimeout( function() {
+          self.loaded( self.tabs.create.cont );
+          self.tabs.view.loaded = false;
           self.loadCreate( true );
         }, 1500 );
       }
