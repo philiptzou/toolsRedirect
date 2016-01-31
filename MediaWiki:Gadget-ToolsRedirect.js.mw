@@ -381,12 +381,10 @@ function _initToolsRedirect() {
 				}
 
 				this.findVariants( pagename, titles, function( tt ) {
-					self.findNotExists( tt, function( t ) {
+					self.findNotExists( tt, function( titles ) {
 						self.loaded( container );
-						l = t.length;
-						for ( var i = 0; i < l; i ++ ) {
-							var title = t[i],
-								ultitle = title.replace( ' ', '_' ),
+						jQuery.each( titles, function( _, title ) {
+							var ultitle = title.replace( ' ', '_' ),
 								baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
 								entry = jQuery( '<p/>' ).appendTo( container );
 							self.buildSelection(
@@ -399,11 +397,11 @@ function _initToolsRedirect() {
 								} ],
 								ultitle, false
 							).appendTo( entry );
-						}
+						} );
 						var desc = jQuery( 'p.desc', container );
 						if ( after )
-							after.call( self, l );
-						if ( l ) {
+							after.call( self, titles.length );
+						if ( titles.length > 0 ) {
 							self.buildMethods( 
 								[ { href: '#',
 										title: self.msg.selectall,
