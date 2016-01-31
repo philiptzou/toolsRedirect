@@ -342,7 +342,7 @@ function _initToolsRedirect() {
 
 				jQuery.each( [ 'zh-hans', 'zh-hant' ], function( idx, variant ) {
 					deferreds.push( jQuery.ajax( self.buildQuery(
-						{ action: 'parse', text: titles, prop: 'text', variant: v[i] } ) ) );
+						{ action: 'parse', text: titles, prop: 'text', variant: variant } ) ) );
 				} );
 
 				jQuery.when.apply( jQuery, deferreds ).done( function() {
