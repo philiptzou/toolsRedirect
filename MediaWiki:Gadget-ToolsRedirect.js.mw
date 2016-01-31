@@ -8,15 +8,16 @@ function _initToolsRedirect() {
 		msglang = 'zh-hant';
 	}
 	importScriptCallback( 'MediaWiki:Gadget-ToolsRedirect-msg-' + msglang + '.js', function() {
-	
+
 		window.TR = window.TR || {};
-		
+
+		TR.optionFindBoldsAsTitles = TR.optionFindBoldsAsTitles || false;
+
 		jQuery.extend(window.TR, {
 			msg: tools_redirect_msg,
 			tabselem: null,
 			tagselem: null,
 			variants: ['zh-cn', 'zh-hk', 'zh-mo', 'zh-sg', 'zh-tw'],
-			optionFindBoldsAsTitles: false,
 			init: function() {
 				var self = this,
 						btn = jQuery( '<li id="ca-redirect"><span><a title="' +
