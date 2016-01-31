@@ -1,7 +1,9 @@
 ( function( jQuery ) {
 "strict";
 
-window.TR = {
+window.TR = window.TR || {};
+
+jQuery.extend(window.TR, {
   msg: tools_redirect_msg,
   tabselem: null,
   tagselem: null,
@@ -394,7 +396,7 @@ window.TR = {
     if ( after ) query.success = after;
     return query;
   }
-}
+} );
 
 jQuery( function() {
   TR.init();
