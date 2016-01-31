@@ -287,7 +287,7 @@ window.TR = {
     } );
     jQuery.when.apply( jQuery, deferreds ).done( function() {
       var titles = jQuery.map(
-        arguments, function( _, d ) {
+        arguments, function( d ) {
           return d.parse.displaytitle;
       } );
       callback.call( self, titles );
