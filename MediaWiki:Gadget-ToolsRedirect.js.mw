@@ -345,7 +345,7 @@ function _initToolsRedirect() {
 
 				jQuery.when.apply( jQuery, deferreds ).done( function() {
 					jQuery.each( arguments, function() {
-						alltitles = alltitles.concat( jQuery( this.parse.text['*'] )
+						alltitles = alltitles.concat( jQuery( this[0].parse.text['*'] )
 													  .text().replace( /(^\s*|\s*$)/g, '' ).split( '|' ) );
 					} );
 					alltitles = alltitles.join( '|' );
