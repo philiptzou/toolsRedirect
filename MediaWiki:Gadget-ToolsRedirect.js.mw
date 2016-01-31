@@ -292,22 +292,19 @@ function _initToolsRedirect() {
 						}
 					} ) );
 			},
-			findVariants: function( pagenames, callback ) {
+			findVariants: function( pagename, titles, callback ) {
 				var xhr,
 					self = this,
 					deferreds = Array();
 				$.each( this.variants, function( _, variant ) {
-					$.each( pagenames, function( _, pagename ) {
-						deferreds.push( jQuery.ajax( self.buildQuery( {
-							action: 'parse',
-							page: pagename,
-							prop: 'displaytitle',
-							variant: variant
-						} ) ) );
-					} );
+					deferreds.push( jQuery.ajax( self.buildQuery( {
+						action: 'parse',
+						page: pagename,
+						prop: 'displaytitle',
+						variant: variant
+					} ) ) );
 				} );
 				jQuery.when.apply( jQuery, deferreds ).done( function() {
-					var titles = Array();
 					jQuery.each( arguments, function() {
 						var title = this[0].parse.displaytitle;
 						if ( titles.indexOf( title ) === -1 ) {
@@ -351,15 +348,14 @@ function _initToolsRedirect() {
 			},
 			findRedirect: function( pagename, after ) {
 				var self = this,
-					pagenames = [pagename],
+					titles = Array(),
 					container = this.tabs.create.cont;
 				this.loading( container );
 				if ( this.optionFindBoldsAsTitles ) {
 					jQuery( 'div#mw-content-text > p > b' ).each( function() {
-						pagenames.push( jQuery( this ).text() ); } );
+						titles.push( jQuery( this ).text() ); } );
 				}
-				console.log( pagenames );
-				this.findVariants( pagenames, function( tt ) {
+				this.findVariants( pagename, titles, function( tt ) {
 					self.findNotExists( tt, function( t ) {
 						self.loaded( container );
 						l = t.length;
