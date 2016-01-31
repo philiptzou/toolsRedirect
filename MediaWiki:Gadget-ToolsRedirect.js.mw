@@ -1,4 +1,4 @@
-function _initToolsRedirect( jQuery ) {
+function _initToolsRedirect() {
 
 	if ( !( jQuery.fn.dialog && jQuery.fn.tabs ) ) {
 		return;
