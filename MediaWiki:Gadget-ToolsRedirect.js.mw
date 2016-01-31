@@ -1,119 +1,124 @@
+( function( jQuery ) {
+"strict";
+
 var TR = {
   msg: tools_redirect_msg,
   tabselem: null,
   tagselem: null,
   variants: ['zh-cn', 'zh-hk', 'zh-sg', 'zh-tw'],
   button: function( click ) {
-    var btn = jQuery( '<li id="ca-redirect">' + '<span><a title="' + TR.msg.btndesc +
-      '">' + TR.msg.btntitle + '</a></span></li>' );
+    var btn = jQuery( '<li id="ca-redirect">' + '<span><a title="' + this.msg.btndesc +
+      '">' + this.msg.btntitle + '</a></span></li>' );
     btn.click( click );
     jQuery( 'li#ca-history' ).after( btn );
   },
   dialog: function() {
-    var dlg = jQuery( '<div class="dialog-redirect" title="' + TR.msg.dlgtitle + '"></div>' ).dialog( {
+    var dlg = jQuery( '<div class="dialog-redirect" title="' + this.msg.dlgtitle + '"></div>' ).dialog( {
       bgiframe: true, resizable: false, modal: true, width: 600 } );
-    TR.tabselem = jQuery( '<div class="tab-redirect"></div>' ).appendTo( dlg );
-    TR.tagselem = jQuery( '<ul/>' ).appendTo( TR.tabselem );
-    TR.addTabs();
-    TR.tabselem.tabs();
+    this.tabselem = jQuery( '<div class="tab-redirect"></div>' ).appendTo( dlg );
+    this.tagselem = jQuery( '<ul/>' ).appendTo( this.tabselem );
+    this.addTabs();
+    this.tabselem.tabs();
   },
   addTabs: function() {
-    for ( var kname in TR.tabs ) {
-      if ( typeof TR.tabs[kname] === 'function' ) {
-        TR.tabs[kname] = TR.tabs[kname]();
+    for ( var kname in this.tabs ) {
+      if ( typeof this.tabs[kname] === 'function' ) {
+        this.tabs[kname] = this.tabs[kname]();
       }
-      var tab = TR.tabs[kname];
-      TR.tagselem.append( tab.tag );
-      TR.tabselem.append( tab.cont );
+      var tab = this.tabs[kname];
+      this.tagselem.append( tab.tag );
+      this.tabselem.append( tab.cont );
     }
     // default tab, autoload when dialog initiate
-    TR.loadView();
+    this.loadView();
   },
   createTab: function( tabname, tabtitle, callback ) {
-    var tag = jQuery( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' );
-    var cont = jQuery( '<div id="tab-' + tabname + '"/>' );
+    var self = this,
+        tag = jQuery( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
+        cont = jQuery( '<div id="tab-' + tabname + '"/>' );
     jQuery( 'a', tag ).click(
       function() {
-        TR.tabselem.tabs( 'select', '#tab-' + tabname );
+        self.tabselem.tabs( 'select', '#tab-' + tabname );
         callback();
         return false;
       }
     );
     return { 'tag': tag, 'cont': cont, loaded: false };
   },
+  _tabView: function() {
+    return this.createTab( 'view', this.msg.tabviewtitle, this.loadView );
+  },
+  _tabCreate: function() {
+    return this.createTab( 'create', this.msg.tabcreatetitle, this.loadCreate );
+  },
   tabs: {
-    view: function() {
-      return TR.createTab( 'view', TR.msg.tabviewtitle, TR.loadView );
-    },
-    create: function() {
-      return TR.createTab( 'create', TR.msg.tabcreatetitle, TR.loadCreate );
-    }
+    view: TR._tabView,
+    create: TR._tabView
   },
   fix: function( pagenames ) {
-    var desc = jQuery( 'p.desc', TR.tabs.view.cont ).text( TR.msg.fixloading );
-    jQuery( 'p[class!=desc]', TR.tabs.view.cont ).remove();
-    TR.loading( TR.tabs.view.cont );
-    TR.bulkEdit( pagenames, TR.msg.fixtext.replace( '$1', wgPageName ),
-      TR.msg.fixsummary, function() {
-        TR.loaded( TR.tabs.view.cont );
-        TR.loadView( true );
+    var self = this,
+        desc = jQuery( 'p.desc', this.tabs.view.cont ).text( this.msg.fixloading );
+    jQuery( 'p[class!=desc]', this.tabs.view.cont ).remove();
+    this.loading( this.tabs.view.cont );
+    this.bulkEdit(
+      pagenames,
+      this.msg.fixtext.replace( '$1', wgPageName ),
+      this.msg.fixsummary, function() {
+        self.loaded( self.tabs.view.cont );
+        self.loadView( true );
       }
     );
   },
   create: function( pagenames ) {
-    var desc = jQuery( 'p.desc', TR.tabs.create.cont ).text( TR.msg.createloading );
-    jQuery( 'p[class!=desc]', TR.tabs.create.cont ).remove();
-    TR.loading( TR.tabs.create.cont );
-    TR.bulkEdit( pagenames, TR.msg.createtext.replace( '$1', wgPageName ),
-      TR.msg.createsummary.replace( '$1', wgPageName ), function() {
-        TR.loaded( TR.tabs.create.cont );
-        TR.tabs.view.loaded = false;
-        TR.loadCreate( true );
+    var self = this,
+        desc = jQuery( 'p.desc', this.tabs.create.cont ).text( this.msg.createloading );
+    jQuery( 'p[class!=desc]', this.tabs.create.cont ).remove();
+    this.loading( this.tabs.create.cont );
+    this.bulkEdit(
+      pagenames,
+      this.msg.createtext.replace( '$1', wgPageName ),
+      this.msg.createsummary.replace( '$1', wgPageName ), function() {
+        self.loaded( self.tabs.create.cont );
+        self.tabs.view.loaded = false;
+        self.loadCreate( true );
       }
     );
   },
   bulkEdit: function( titles, text, summary, callback ) {
+    var self = this;
     titles = titles.join( '|' );
-    jQuery.ajax( TR.buildQuery(
+    jQuery.ajax( this.buildQuery(
       { action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' },
       null,
       function( data ) {
-        var pages = data.query.pages;
-        var l = 0; var f = 0;
-        for( var pageid in pages ) {
-          l ++;
-        }
-        for( var pageid in pages ) {
-          page = pages[pageid];
-          jQuery.ajax( TR.buildQuery(
-            { action: 'edit', title: page.title, token: page.edittoken,
-              'text': text, 'summary': summary }, null,
-            function() {
-              f ++;
-              if ( l == f ) {
-                callback();
-              }
-            }
+        var deferreds = Array();
+        jQuery.each( data.query.pages, function( idx, page ) {
+          deferreds.push( jQuery.ajax(
+            self.buildQuery( {
+              action: 'edit', title: page.title, token: page.edittoken,
+              'text': text, 'summary': summary } )
           ) );
-        }
+        });
+        jQuery.when.apply( jQuery, deferreds ).done( callback );
       }
     ) );
   },
   reloadTabCont: function( tabname, callback ) {
-    var tab = TR.tabs[tabname];
+    var tab = this.tabs[tabname];
     tab.loaded = false;
-    TR.loadTabCont( tabname, callback );
+    this.loadTabCont( tabname, callback );
   },
   loadTabCont: function( tabname, callback, reload ) {
-    var tab = TR.tabs[tabname];
+    var self = this,
+        tab = this.tabs[tabname];
     if ( reload ) tab.loaded = false;
     if ( !tab.loaded ) {
       tab.cont.html( '' );
       var desc = jQuery( '<p class="desc">' +
-        TR.msg.rediloading + '</p>' ).appendTo( tab.cont );
+        this.msg.rediloading + '</p>' ).appendTo( tab.cont );
       callback( function( success ) {
-        if ( success ) desc.text( TR.msg['tab' + tabname + 'desc'] );
-        else desc.text( TR.msg['tab' + tabname + 'notfound'] );
+        if ( success ) desc.text( self.msg['tab' + tabname + 'desc'] );
+        else desc.text( self.msg['tab' + tabname + 'notfound'] );
       } );
       tab.loaded = true;
     }
@@ -166,11 +171,12 @@ var TR = {
     return a;
   },
   buildMethods: function( methods ) {
-    var $container = jQuery( '<span/>' ),
+    var self = this,
+        $container = jQuery( '<span/>' ),
         methodLength = methods.length;
     $container.append( methodLength ? ' (' : '' );
     jQuery.each( methods, function( idx, method ) {
-      TR.buildLink( method ).appendTo( $container );
+      self.buildLink( method ).appendTo( $container );
       if ( idx + 1 < methodLength ) {
         $container.append( '<span class="gap">|</span>' );
       }
@@ -181,32 +187,35 @@ var TR = {
   buildSelection: function( main, metd, mt, dsab ) {
     var cont = jQuery( '<span/>' );
     var sele = jQuery( '<input type="checkbox"/>' ).appendTo( cont );
-    TR.buildLink( main).appendTo( cont );
-    TR.buildMethods( metd ).appendTo( cont );
+    this.buildLink( main).appendTo( cont );
+    this.buildMethods( metd ).appendTo( cont );
     cont.append( '<span class="meta-title">' + mt + '</span>' );
     if ( dsab )
       sele.attr( 'disabled', true );
     return cont;
   },
   loadView: function( reload ) {
-    TR.loadTabCont( 'view', function( after ) {
-      TR.loadRedirect( wgPageName, TR.tabs.view.cont, 0, after );
+    var self = this;
+    this.loadTabCont( 'view', function( after ) {
+      self.loadRedirect( wgPageName, self.tabs.view.cont, 0, after );
     }, reload );
   },
   loadCreate: function( reload ) {
-    TR.loadTabCont( 'create', function( after ) {
-      TR.findRedirect( wgPageName, after );
+  	var self = this;
+    this.loadTabCont( 'create', function( after ) {
+      self.findRedirect( wgPageName, after );
     }, reload );
   },
   loadRedirect: function( pagename, container, deep, after ) {
-    TR.loading( container );
-    var top = deep ? jQuery( '<dl/>' ).appendTo( container ) : container;
-    jQuery.ajax( TR.buildQuery(
+    this.loading( container );
+    var self = this,
+        top = deep ? jQuery( '<dl/>' ).appendTo( container ) : container;
+    jQuery.ajax( this.buildQuery(
       { action: 'query', list: 'backlinks', bltitle: pagename, bllimit: 'max', blfilterredir: 'redirects' },
       null, function( data ) {
-        TR.loaded( container );
+        self.loaded( container );
         var l = data.query.backlinks.length;
-        var desc = jQuery( 'p.desc', TR.tabs.view.cont );
+        var desc = jQuery( 'p.desc', self.tabs.view.cont );
         for ( var i = 0; i < l; i ++ ) {
           var link = data.query.backlinks[i];
           if ( link.title ) {
@@ -214,51 +223,51 @@ var TR = {
             var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
             var entry = ( deep ? jQuery( '<dd/>' ) : jQuery( '<p/>' ) ).appendTo( top );
             var methods = [ {href: baseuri + '&action=edit',
-                             title: TR.msg.rediedit } ];
+                             title: self.msg.rediedit } ];
             if ( deep ) {
               methods.push(
                 { href: '#',
-                  title: TR.msg.tabviewfix,
+                  title: self.msg.tabviewfix,
                   click: function( evt ) {
                   	evt.preventDefault();
-                    TR.clickAction( entry, TR.fix ); }
+                    self.clickAction( entry, self.fix ); }
                 } );
             }
-            TR.buildSelection( { href: baseuri + '&redirect=no', title: link.title },
+            self.buildSelection( { href: baseuri + '&redirect=no', title: link.title },
               methods, ultitle, !deep ).appendTo( entry );
-            TR.loadRedirect( link.title, entry, deep + 1 );
+            self.loadRedirect( link.title, entry, deep + 1 );
           }
         }
         if ( after ) {
           after( l );
         } else if ( l && jQuery( 'a', desc ).length == 0 ) {
-          TR.buildMethods(
+          self.buildMethods(
             [ { href: '#',
-                title: TR.msg.selectall,
+                title: self.msg.selectall,
                 click: function( evt ) {
                   evt.preventDefault();
-                  TR.selectAll( TR.tabs.view.cont ); }
+                  self.selectAll( self.tabs.view.cont ); }
               },
               { href: '#',
-                title: TR.msg.selectinverse,
+                title: self.msg.selectinverse,
                 click: function( evt ) {
                   evt.preventDefault();
-                  TR.selectInverse( TR.tabs.view.cont ); }
+                  self.selectInverse( self.tabs.view.cont ); }
               },
               { href: '#',
-                title: TR.msg.tabviewfix,
+                title: self.msg.tabviewfix,
                 click: function( evt ) {
                   evt.preventDefault();
-                  TR.selectAction( TR.tabs.view.cont, TR.fix ); }
+                  self.selectAction( self.tabs.view.cont, self.fix ); }
               } ] ).appendTo( desc );
         }
       } ) );
   },
   findVariants: function( pagename, titles, callback ) {
-    var pc = 0;
-    var l = TR.variants.length;
+    var pc = 0,
+        l = this.variants.length;
     for ( var i = 0; i < l; i ++ ) {
-      jQuery.ajax( TR.buildQuery( {action: 'parse', page: pagename, prop: 'displaytitle', variant: TR.variants[i] },
+      jQuery.ajax( this.buildQuery( {action: 'parse', page: pagename, prop: 'displaytitle', variant: this.variants[i] },
       null, function( data ) {
         titles.push( data.parse.displaytitle );
         pc ++;
@@ -269,19 +278,20 @@ var TR = {
     }
   },
   findNotExists: function( titles, callback ) {
-    var titles = titles.join('|');
-    var alltitles = [];
-    var v = ['zh-hans', 'zh-hant'];
-    var t = 0;
-    var excludes = [ '用字模式' ];
+    var self = this,
+        titles = titles.join('|'),
+        alltitles = [],
+        v = ['zh-hans', 'zh-hant'],
+        t = 0,
+        excludes = [ '用字模式' ];
     for( var i = 0; i < 2; i ++ ) {
-      jQuery.ajax( TR.buildQuery( { action: 'parse', text: titles, prop: 'text', variant: v[i] },
+      jQuery.ajax( this.buildQuery( { action: 'parse', text: titles, prop: 'text', variant: v[i] },
       null, function( data ) {
         alltitles = alltitles.concat( jQuery( data.parse.text['*'] ).text().replace( /(^\s*|\s*$)/g, '' ).split( '|' ) );
         t ++;
         if ( t == 2 ) {
           alltitles = alltitles.join( '|' );
-          jQuery.ajax( TR.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles }, null,
+          jQuery.ajax( self.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles }, null,
             function( data ) {
               titles = [];
               var pages = data.query.pages;
@@ -299,29 +309,30 @@ var TR = {
     }
   },
   findRedirect: function( pagename, after ) {
-    var container = TR.tabs.create.cont;
-    TR.loading( container );
-    var titles = Array();
+    var self = this,
+        titles = Array(),
+        container = this.tabs.create.cont;
+    this.loading( container );
     jQuery( 'div#bodyContent p b' ).each( function() {
       titles.push( jQuery( this ).text() ); } );
-    TR.findVariants( pagename, titles, function( tt ) {
-      TR.findNotExists( tt, function( t ) {
-        TR.loaded( container );
+    this.findVariants( pagename, titles, function( tt ) {
+      self.findNotExists( tt, function( t ) {
+        self.loaded( container );
         l = t.length;
         for ( var i = 0; i < l; i ++ ) {
           var title = t[i];
           var ultitle = title.replace( ' ', '_' );
           var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
           var entry = jQuery( '<p/>' ).appendTo( container );
-          TR.buildSelection(
+          self.buildSelection(
             { href: baseuri + '&action=edit&redlink=1',
               'title': title,
               classname: 'new' },
             [ { href: '#',
-                title: TR.msg.tabcreatetitle,
+                title: self.msg.tabcreatetitle,
                 click: function( evt ) {
                   evt.preventDefault();
-                  TR.clickAction( entry, TR.create ); }
+                  self.clickAction( entry, self.create ); }
               } ],
             ultitle, false ).appendTo( entry );
         }
@@ -329,24 +340,24 @@ var TR = {
         if ( after )
           after( l );
         if ( l ) {
-          TR.buildMethods( 
+          self.buildMethods( 
             [ { href: '#',
-                title: TR.msg.selectall,
+                title: self.msg.selectall,
                 click: function( evt ) {
                   evt.preventDefault();
-                  TR.selectAll( container ); }
+                  self.selectAll( container ); }
               },
               { href: '#',
-                title: TR.msg.selectinverse,
+                title: self.msg.selectinverse,
                 click: function( evt ) {
                   evt.preventDefault();
-                  TR.selectInverse( container ); }
+                  self.selectInverse( container ); }
               },
               { href: '#',
-                title: TR.msg.tabcreatetitle,
+                title: self.msg.tabcreatetitle,
                 click: function( evt ) {
                   evt.preventDefault();
-                  TR.selectAction( container, TR.create ); }
+                  self.selectAction( container, self.create ); }
               }
             ] ).appendTo( desc );
           }
@@ -366,3 +377,5 @@ var TR = {
 jQuery( function() {
   TR.button( TR.dialog );
 });
+
+})( jQuery );
