@@ -44,10 +44,10 @@ window.TR = {
         tag = jQuery( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
         cont = jQuery( '<div id="tab-' + tabname + '"/>' );
     jQuery( 'a', tag ).click(
-      function() {
+      function( evt ) {
+        evt.preventDefault();
         self.tabselem.tabs( 'select', '#tab-' + tabname );
-        callback();
-        return false;
+        callback.call( self );
       }
     );
     return { 'tag': tag, 'cont': cont, loaded: false };
@@ -106,7 +106,9 @@ window.TR = {
               'text': text, 'summary': summary } )
           ) );
         });
-        jQuery.when.apply( jQuery, deferreds ).done( callback );
+        jQuery.when.apply( jQuery, deferreds ).done( function() {
+          callback.call( self );
+        } );
       }
     ) );
   },
@@ -123,7 +125,7 @@ window.TR = {
       tab.cont.html( '' );
       var desc = jQuery( '<p class="desc">' +
         this.msg.rediloading + '</p>' ).appendTo( tab.cont );
-      callback( function( success ) {
+      callback.call( this, function( success ) {
         if ( success ) desc.text( self.msg['tab' + tabname + 'desc'] );
         else desc.text( self.msg['tab' + tabname + 'notfound'] );
       } );
@@ -162,11 +164,11 @@ window.TR = {
         pagenames.push( jQuery( '.meta-title', jQuery( this ).parent() ).text() );
       } );
     if ( pagenames.length )
-      cb( pagenames );
+      cb.call( this, pagenames );
   },
   clickAction: function( cont, cb ) {
     var pagename = jQuery( '.meta-title', cont ).text();
-    cb( [pagename] );
+    cb.call( this, [pagename] );
   },
   buildLink: function( attr ) {
     var a = jQuery( '<a href="' + attr.href + '" title="' + attr.title +
@@ -272,18 +274,24 @@ window.TR = {
       } ) );
   },
   findVariants: function( pagename, titles, callback ) {
-    var pc = 0,
-        l = this.variants.length;
-    for ( var i = 0; i < l; i ++ ) {
-      jQuery.ajax( this.buildQuery( {action: 'parse', page: pagename, prop: 'displaytitle', variant: this.variants[i] },
-      null, function( data ) {
-        titles.push( data.parse.displaytitle );
-        pc ++;
-        if ( pc == l ) {
-          callback( titles );
-        }
+    var xhr,
+        self = this,
+        titles = Array(),
+        deferreds = Array();
+    $.each( this.variants, function( idx, variant ) {
+      xhr = jQuery.ajax( this.buildQuery( {
+        action: 'parse',
+        page: pagename,
+        prop: 'displaytitle',
+        variant: this.variants[i]
       } ) );
-    }
+      xhr.done( function( data ) {
+        titils.push( data.parse.displaytitle );
+      } );
+    } );
+    jQuery.when.apply( jQuery, deferreds ).done( function() {
+      callback.call( self, titles );
+    } );
   },
   findNotExists: function( titles, callback ) {
     var self = this,
@@ -309,7 +317,7 @@ window.TR = {
                   titles.push( title );
                 }
               }
-              callback( titles );
+              callback.call( self, titles );
             }
           ) );
         }
