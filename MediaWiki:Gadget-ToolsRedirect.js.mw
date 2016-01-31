@@ -1,5 +1,4 @@
 ( function( jQuery ) {
-"strict";
 
 window.TR = window.TR || {};
 
@@ -7,7 +6,8 @@ jQuery.extend(window.TR, {
   msg: tools_redirect_msg,
   tabselem: null,
   tagselem: null,
-  variants: ['zh-cn', 'zh-hk', 'zh-sg', 'zh-tw'],
+  variants: ['zh-cn', 'zh-hk', 'zh-mo', 'zh-sg', 'zh-tw'],
+  optionFindBoldsAsTitles: false,
   init: function() {
     var self = this,
         btn = jQuery( '<li id="ca-redirect"><span><a title="' +
@@ -258,7 +258,7 @@ jQuery.extend(window.TR, {
         }
         if ( after ) {
           after( l );
-        } else if ( l && jQuery( 'a', desc ).length == 0 ) {
+        } else if ( l && jQuery( 'a', desc ).length === 0 ) {
           self.buildMethods(
             [ { href: '#',
                 title: self.msg.selectall,
@@ -337,8 +337,10 @@ jQuery.extend(window.TR, {
         titles = Array(),
         container = this.tabs.create.cont;
     this.loading( container );
-    jQuery( 'div#bodyContent p b' ).each( function() {
-      titles.push( jQuery( this ).text() ); } );
+    if ( this.optionFindBoldsAsTitles ) {
+      jQuery( 'div#bodyContent p b' ).each( function() {
+        titles.push( jQuery( this ).text() ); } );
+    }
     this.findVariants( pagename, titles, function( tt ) {
       self.findNotExists( tt, function( t ) {
         self.loaded( container );
