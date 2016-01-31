@@ -10,7 +10,7 @@ function _initToolsRedirect() {
 	importScriptCallback( 'MediaWiki:Gadget-ToolsRedirect-msg-' + msglang + '.js', function() {
 
 		var origPageName = mw.config.get('wgPageName'),
-			wgScriptPath = mw.config.get('wgScriptPath');
+			scriptPath = mw.config.get('wgScriptPath');
 		window.TR = window.TR || {};
 
 		TR.optionFindBoldsAsTitles = TR.optionFindBoldsAsTitles || false;
@@ -250,7 +250,7 @@ function _initToolsRedirect() {
 							var link = data.query.backlinks[i];
 							if ( link.title ) {
 								var ultitle = link.title.replace( ' ', '_' );
-								var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
+								var baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle );
 								var entry = ( deep ? jQuery( '<dd/>' ) : jQuery( '<p/>' ) ).appendTo( top );
 								var methods = [ {href: baseuri + '&action=edit',
 																 title: self.msg.rediedit } ];
@@ -363,7 +363,7 @@ function _initToolsRedirect() {
 						for ( var i = 0; i < l; i ++ ) {
 							var title = t[i];
 							var ultitle = title.replace( ' ', '_' );
-							var baseuri = encodeURI( wgScriptPath + '/index.php?title=' + ultitle );
+							var baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle );
 							var entry = jQuery( '<p/>' ).appendTo( container );
 							self.buildSelection(
 								{ href: baseuri + '&action=edit&redlink=1',
@@ -406,7 +406,7 @@ function _initToolsRedirect() {
 				} );
 			},
 			buildQuery: function( data, before, after ) {
-				var query = { url: wgScriptPath + '/api.php', dataType: 'json', type: 'POST' };
+				var query = { url: scriptPath + '/api.php', dataType: 'json', type: 'POST' };
 				query.data = data;
 				query.data.format = 'json';
 				if ( before ) query.beforeSend = before;
