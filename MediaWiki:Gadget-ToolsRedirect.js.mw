@@ -286,7 +286,7 @@ window.TR = {
         variant: variant
       } ) );
       xhr.done( function( data ) {
-        titils.push( data.parse.displaytitle );
+        titles.push( data.parse.displaytitle );
       } );
     } );
     jQuery.when.apply( jQuery, deferreds ).done( function() {
