@@ -9,6 +9,7 @@ function _initToolsRedirect() {
 	}
 	importScriptCallback( 'MediaWiki:Gadget-ToolsRedirect-msg-' + msglang + '.js', function() {
 
+		var origPageName = mw.config.get('wgPageName');
 		window.TR = window.TR || {};
 
 		TR.optionFindBoldsAsTitles = TR.optionFindBoldsAsTitles || false;
@@ -81,7 +82,7 @@ function _initToolsRedirect() {
 				this.loading( this.tabs.view.cont );
 				this.bulkEdit(
 					pagenames,
-					this.msg.fixtext.replace( '$1', wgPageName ),
+					this.msg.fixtext.replace( '$1', origPageName ),
 					this.msg.fixsummary, function() {
 						// delay load before the asynchronous tasks on server finished
 						setTimeout( function() {
@@ -98,8 +99,8 @@ function _initToolsRedirect() {
 				this.loading( this.tabs.create.cont );
 				this.bulkEdit(
 					pagenames,
-					this.msg.createtext.replace( '$1', wgPageName ),
-					this.msg.createsummary.replace( '$1', wgPageName ), function() {
+					this.msg.createtext.replace( '$1', origPageName ),
+					this.msg.createsummary.replace( '$1', origPageName ), function() {
 						// delay load before the asynchronous tasks on server finished
 						setTimeout( function() {
 							self.loaded( self.tabs.create.cont );
@@ -225,13 +226,13 @@ function _initToolsRedirect() {
 			loadView: function( reload ) {
 				var self = this;
 				this.loadTabCont( 'view', function( after ) {
-					self.loadRedirect( wgPageName, self.tabs.view.cont, 0, after );
+					self.loadRedirect( origPageName, self.tabs.view.cont, 0, after );
 				}, reload );
 			},
 			loadCreate: function( reload ) {
 				var self = this;
 				this.loadTabCont( 'create', function( after ) {
-					self.findRedirect( wgPageName, after );
+					self.findRedirect( origPageName, after );
 				}, reload );
 			},
 			loadRedirect: function( pagename, container, deep, after ) {
@@ -267,7 +268,7 @@ function _initToolsRedirect() {
 							}
 						}
 						if ( after ) {
-							after( l );
+							after.call( self, l );
 						} else if ( l && jQuery( 'a', desc ).length === 0 ) {
 							self.buildMethods(
 								[ { href: '#',
@@ -291,23 +292,29 @@ function _initToolsRedirect() {
 						}
 					} ) );
 			},
-			findVariants: function( pagename, titles, callback ) {
+			findVariants: function( pagenames, callback ) {
 				var xhr,
-						self = this,
-						deferreds = Array();
+					self = this,
+					deferreds = Array();
 				$.each( this.variants, function( _, variant ) {
-					deferreds.push( jQuery.ajax( self.buildQuery( {
-						action: 'parse',
-						page: pagename,
-						prop: 'displaytitle',
-						variant: variant
-					} ) ) );
+					$.each( pagenames, function( _, pagename ) {
+						deferreds.push( jQuery.ajax( self.buildQuery( {
+							action: 'parse',
+							page: pagename,
+							prop: 'displaytitle',
+							variant: variant
+						} ) ) );
+					} );
 				} );
 				jQuery.when.apply( jQuery, deferreds ).done( function() {
-					var titles = jQuery.map(
-						arguments, function( d ) {
-							return d[0].parse.displaytitle;
+					var titles = Array();
+					jQuery.each(arguments, function( d ) {
+						var title = d[0].parse.displaytitle;
+						if ( titles.indexOf( title ) === -1 ) {
+							titles.push( title );
+						}
 					} );
+					
 					callback.call( self, titles );
 				} );
 			},
@@ -344,14 +351,14 @@ function _initToolsRedirect() {
 			},
 			findRedirect: function( pagename, after ) {
 				var self = this,
-					titles = Array(),
+					pagenames = [pagename],
 					container = this.tabs.create.cont;
 				this.loading( container );
 				if ( this.optionFindBoldsAsTitles ) {
 					jQuery( 'div#mw-content-text > p > b' ).each( function() {
-						titles.push( jQuery( this ).text() ); } );
+						pagenames.push( jQuery( this ).text() ); } );
 				}
-				this.findVariants( pagename, titles, function( tt ) {
+				this.findVariants( pagenames, function( tt ) {
 					self.findNotExists( tt, function( t ) {
 						self.loaded( container );
 						l = t.length;
@@ -374,7 +381,7 @@ function _initToolsRedirect() {
 						}
 						var desc = jQuery( 'p.desc', container );
 						if ( after )
-							after( l );
+							after.call( self, l );
 						if ( l ) {
 							self.buildMethods( 
 								[ { href: '#',
