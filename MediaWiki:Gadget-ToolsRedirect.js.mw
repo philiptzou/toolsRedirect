@@ -352,9 +352,9 @@ function _initToolsRedirect() {
 					jQuery.ajax( self.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles } ) )
 					.done( function( data ) {
 						titles = [];
-						jQuery.each( data.query.pages, function( idx, page ) {
+						jQuery.each( data.query.pages, function( pageid, page ) {
 							var title = page.title;
-							if ( pageid < 0 && jQuery.inArray( title, excludes ) == -1 ) {
+							if ( pageid < 0 && excludes.indexOf( title ) === -1 ) {
 								titles.push( title );
 							}
 						} );
