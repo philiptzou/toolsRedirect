@@ -361,20 +361,21 @@ function _initToolsRedirect() {
 						self.loaded( container );
 						l = t.length;
 						for ( var i = 0; i < l; i ++ ) {
-							var title = t[i];
-							var ultitle = title.replace( ' ', '_' );
-							var baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle );
-							var entry = jQuery( '<p/>' ).appendTo( container );
+							var title = t[i],
+								ultitle = title.replace( ' ', '_' ),
+								baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
+								entry = jQuery( '<p/>' ).appendTo( container );
 							self.buildSelection(
 								{ href: baseuri + '&action=edit&redlink=1',
 									'title': title,
 									classname: 'new' },
 								[ { href: '#',
-										title: self.msg.tabcreatetitle,
-										click: function( evt ) {
-											evt.preventDefault();
-											self.clickAction( entry, self.create ); }
-									} ],
+									title: self.msg.tabcreatetitle,
+									click: function( evt ) {
+										var entry = this.parents('p:first');
+										evt.preventDefault();
+										self.clickAction( entry, self.create ); }
+								} ],
 								ultitle, false ).appendTo( entry );
 						}
 						var desc = jQuery( 'p.desc', container );
