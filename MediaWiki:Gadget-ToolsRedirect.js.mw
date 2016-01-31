@@ -383,7 +383,7 @@ window.TR = {
 }
 
 jQuery( function() {
-  TR.button( TR.dialog );
+  TR.init();
 });
 
 })( jQuery );
