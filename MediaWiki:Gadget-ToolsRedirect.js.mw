@@ -133,11 +133,11 @@ var TR = {
     }
   },
   selectAll: function( cont ) {
-    jQuery( 'input[type=checkbox][disabled!=true]', cont )
+    jQuery( 'input[type=checkbox]:not(:disabled)', cont )
       .attr( 'checked', true );
   },
   selectInverse: function( cont ) {
-    jQuery( 'input[type=checkbox][disabled!=true]', cont )
+    jQuery( 'input[type=checkbox]:not(:disabled)', cont )
       .each( function() {
         var e = jQuery( this );
         e.attr( 'checked', !e.attr( 'checked' ) );
@@ -145,7 +145,7 @@ var TR = {
   },
   selectAction: function( cont, cb ) {
     var pagenames = [];
-    jQuery( 'input[type=checkbox][checked=true]', cont )
+    jQuery( 'input[type=checkbox]:checked', cont )
       .each( function() {
         pagenames.push( jQuery( '.meta-title', jQuery( this ).parent() ).text() );
       } );
