@@ -252,20 +252,19 @@ function _initToolsRedirect() {
 				}
 
 				jQuery.ajax( this.buildQuery(
-					{ action: 'query', list: 'backlinks', bltitle: pagename,
-					  bllimit: 'max', blfilterredir: 'redirects' } ) )
+					{ action: 'query', prop: 'redirects', title: pagename, rdlimit: 'max' } ) )
 				.done( function( data ) {
 					self.loaded( container );
-					var l = data.query.backlinks.length;
-					var desc = jQuery( 'p.desc', self.tabs.view.cont );
+					var has_redirect = false,
+						desc = jQuery( 'p.desc', self.tabs.view.cont );
 
-					for ( var i = 0; i < l; i ++ ) {
-						var link = data.query.backlinks[i];
-						if ( link.title ) {
-							var ultitle = link.title.replace( ' ', '_' );
-							var baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle );
-							var entry = ( deep ? jQuery( '<dd/>' ) : jQuery( '<p/>' ) ).appendTo( top );
-							var methods = [ {href: baseuri + '&action=edit',
+					jQuery.each( data.query.pages, function( _, page ) {
+						jQuery.each( page.redirects, function( _, rdpage ) {
+							var rdtitle = rdpage.title,
+								ultitle = title.replace( / /g, '_' ),
+								baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
+								entry = ( deep ? jQuery( '<dd/>' ) : jQuery( '<p/>' ) ).appendTo( top ),
+								methods = [ {href: baseuri + '&action=edit',
 															 title: self.msg.rediedit } ];
 							if ( deep ) {
 								methods.push({
@@ -274,36 +273,39 @@ function _initToolsRedirect() {
 									click: onClickFix
 								} );
 							}
-							self.buildSelection( { href: baseuri + '&redirect=no', title: link.title },
+							self.buildSelection( { href: baseuri + '&redirect=no', title: rdtitle },
 								methods, ultitle, !deep ).appendTo( entry );
 							if ( deep < self.configMaximumRedirectDepth ) {
-								self.loadRedirect( link.title, entry, deep + 1 );
+								self.loadRedirect( rdtitle, entry, deep + 1 );
 							}
-						}
-					}
+							has_redirect = true;
+						} );
+					} );
+
 					if ( after ) {
-						after.call( self, l );
+						after.call( self, has_redirect );
 					}
-					else if ( l && jQuery( 'a', desc ).length === 0 ) {
+					else if ( has_redirect && jQuery( 'a', desc ).length === 0 ) {
 						self.buildMethods(
 							[ { href: '#',
-									title: self.msg.selectall,
-									click: function( evt ) {
-										evt.preventDefault();
-										self.selectAll( self.tabs.view.cont ); }
-								},
-								{ href: '#',
-									title: self.msg.selectinverse,
-									click: function( evt ) {
-										evt.preventDefault();
-										self.selectInverse( self.tabs.view.cont ); }
-								},
-								{ href: '#',
-									title: self.msg.tabviewfix,
-									click: function( evt ) {
-										evt.preventDefault();
-										self.selectAction( self.tabs.view.cont, self.fix ); }
-								} ] ).appendTo( desc );
+								title: self.msg.selectall,
+								click: function( evt ) {
+									evt.preventDefault();
+									self.selectAll( self.tabs.view.cont ); }
+							},
+							{ href: '#',
+								title: self.msg.selectinverse,
+								click: function( evt ) {
+									evt.preventDefault();
+									self.selectInverse( self.tabs.view.cont ); }
+							},
+							{ href: '#',
+								title: self.msg.tabviewfix,
+								click: function( evt ) {
+									evt.preventDefault();
+									self.selectAction( self.tabs.view.cont, self.fix ); }
+							} ]
+						).appendTo( desc );
 					}
 				} );
 			},
