@@ -1,5 +1,5 @@
 div.dialog-redirect .mw-ajax-loader {
-  padding-right:18px;
+  top: 0;
 }
 
 div.dialog-redirect .meta-title {
