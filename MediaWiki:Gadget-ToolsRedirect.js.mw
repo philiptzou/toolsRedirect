@@ -308,8 +308,8 @@ function _initToolsRedirect() {
 				} );
 				jQuery.when.apply( jQuery, deferreds ).done( function() {
 					var titles = Array();
-					jQuery.each(arguments, function( d ) {
-						var title = d[0].parse.displaytitle;
+					jQuery.each( arguments, function() {
+						var title = this[0].parse.displaytitle;
 						if ( titles.indexOf( title ) === -1 ) {
 							titles.push( title );
 						}
