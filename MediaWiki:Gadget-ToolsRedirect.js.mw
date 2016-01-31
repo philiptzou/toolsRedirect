@@ -279,7 +279,7 @@ window.TR = {
         titles = Array(),
         deferreds = Array();
     $.each( this.variants, function( _, variant ) {
-      xhr = jQuery.ajax( this.buildQuery( {
+      xhr = jQuery.ajax( self.buildQuery( {
         action: 'parse',
         page: pagename,
         prop: 'displaytitle',
