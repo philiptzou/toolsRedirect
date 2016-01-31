@@ -1,7 +1,7 @@
 ( function( jQuery ) {
 "strict";
 
-var TR = {
+window.TR = {
   msg: tools_redirect_msg,
   tabselem: null,
   tagselem: null,
