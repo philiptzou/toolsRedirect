@@ -344,11 +344,11 @@ function _initToolsRedirect() {
 			},
 			findRedirect: function( pagename, after ) {
 				var self = this,
-						titles = Array(),
-						container = this.tabs.create.cont;
+					titles = Array(),
+					container = this.tabs.create.cont;
 				this.loading( container );
 				if ( this.optionFindBoldsAsTitles ) {
-					jQuery( 'div#bodyContent p b' ).each( function() {
+					jQuery( 'div#mw-content-text > p > b' ).each( function() {
 						titles.push( jQuery( this ).text() ); } );
 				}
 				this.findVariants( pagename, titles, function( tt ) {
