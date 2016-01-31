@@ -372,7 +372,7 @@ function _initToolsRedirect() {
 								[ { href: '#',
 									title: self.msg.tabcreatetitle,
 									click: function( evt ) {
-										var entry = this.parents('p:first');
+										var entry = jQuery( this ).parents('p:first');
 										evt.preventDefault();
 										self.clickAction( entry, self.create ); }
 								} ],
