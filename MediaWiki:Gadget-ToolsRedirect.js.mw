@@ -9,7 +9,8 @@ function _initToolsRedirect() {
 	}
 	importScriptCallback( 'MediaWiki:Gadget-ToolsRedirect-msg-' + msglang + '.js', function() {
 
-		var origPageName = mw.config.get('wgPageName');
+		var origPageName = mw.config.get('wgPageName'),
+			wgScriptPath = mw.config.get('wgScriptPath');
 		window.TR = window.TR || {};
 
 		TR.optionFindBoldsAsTitles = TR.optionFindBoldsAsTitles || false;
