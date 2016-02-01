@@ -259,6 +259,9 @@ function _initToolsRedirect() {
 						desc = jQuery( 'p.desc', self.tabs.view.cont );
 
 					jQuery.each( data.query.pages, function( _, page ) {
+						if ( !( 'redirects' in page ) ) {
+							return;
+						}
 						jQuery.each( page.redirects, function( _, rdpage ) {
 							var rdtitle = rdpage.title,
 								ultitle = rdtitle.replace( / /g, '_' ),
