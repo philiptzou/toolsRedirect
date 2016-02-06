@@ -1,6 +1,6 @@
 /* vim: set noexpandtab ft=javascript ts=4 sw=4: */
 
-jQuery( function( $ ) {
+mw.loader.using( ['ext.gadget.ToolsRedirect'], function() {
 	"use strict";
 	var compSurnameReg,
 		prefixReg = /[字号號]\s*$/,
@@ -53,7 +53,7 @@ jQuery( function( $ ) {
 		];
 
 	compSurnameReg = new RegExp(
-		'^(' + $.map(compSurnames, RegExp.escape).join('|') + ').');
+		'^(' + jQuery.map(compSurnames, RegExp.escape).join('|') + ').');
 	
 	function findSurname( pagename ) {
 		if ( compSurnameReg.test( pagename ) ) {
@@ -72,7 +72,7 @@ jQuery( function( $ ) {
 			var prevNode = this.previousSibling;
 			if ( prevNode && prefixReg.test( prevNode.textContent ) ) {
 				// trim() is not supported by IE<9
-				var name = $( this ).text().replace( /^\s+|\s+$/g, '' );
+				var name = jQuery( this ).text().replace( /^\s+|\s+$/g, '' );
 				if ( !surname ) {
 					surname = findSurname( pagename );
 				}
@@ -80,7 +80,7 @@ jQuery( function( $ ) {
 			}
 		} );
 
-		return $.unique( retTitles );
+		return jQuery.unique( retTitles );
 	} );
 
 } );

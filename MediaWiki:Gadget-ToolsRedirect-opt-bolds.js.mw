@@ -1,6 +1,6 @@
 /* vim: set noexpandtab ft=javascript ts=4 sw=4: */
 
-jQuery( function() {
+mw.loader.using( ['ext.gadget.ToolsRedirect'], function() {
 	"use strict";
 	window.toolsRedirect.findRedirectBySelector( 'div#mw-content-text > p > b' );
 } );

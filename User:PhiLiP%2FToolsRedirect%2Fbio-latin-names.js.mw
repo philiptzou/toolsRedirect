@@ -1,6 +1,6 @@
 /* vim: set noexpandtab ft=javascript ts=4 sw=4: */
 
-jQuery( function( $ ) {
+mw.loader.using( ['ext.gadget.ToolsRedirect'], function() {
 	"use strict";
 	var prefixReg = /[學学]名\s*：?\s*$/,
 		colonReg = /^\s*[:：]?\s*$/,
@@ -17,11 +17,11 @@ jQuery( function( $ ) {
 			}
 			if ( prevNode && prefixReg.test( prevNode.textContent ) ) {
 				// trim() is not supported by IE<9
-				retTitles.push( $( this ).text().replace( /^\s+|\s+$/g, '' ) );
+				retTitles.push( jQuery( this ).text().replace( /^\s+|\s+$/g, '' ) );
 			}
 		} );
 
-		return $.unique( retTitles );
+		return jQuery.unique( retTitles );
 	} );
 
 } );
