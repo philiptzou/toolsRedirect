@@ -10,7 +10,7 @@ jQuery( function( $ ) {
 		var surname,
 			retTitles = [];
 
-		$content.find( '> p > [lang="la"]' ).each( function() {
+		$content.find( '> p > [lang="la"], > p > i' ).each( function() {
 			var prevNode = this.previousSibling;
 			if ( prevNode && colonReg.test( prevNode.textContent ) ) {
 				prevNode = prevNode.previousSibling;
