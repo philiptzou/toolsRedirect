@@ -441,12 +441,12 @@
 				if ( typeof ret === 'string' ) {
 					titles.push( ret );
 				}
-				else if ( jQuery.isArray( ret ) ) {
-					jQuery.merge( titles, ret );
-				}
 				else if ( 'done' in ret ) {
 					// is Deferred
 					frcDeferreds.push( ret );
+				}
+				else {
+					jQuery.merge( titles, ret );
 				}
 			} );
 
@@ -469,7 +469,7 @@
 					if (typeof ret == 'string' ) {
 						titles.push( ret );
 					}
-					else if ( jQuery.isArray( ret ) ) {
+					else {
 						jQuery.merge( titles, ret );
 					}
 				} );
