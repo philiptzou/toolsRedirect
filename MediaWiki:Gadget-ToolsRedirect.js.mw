@@ -6,20 +6,54 @@ function _initToolsRedirect() {
 	if ( !( jQuery.fn.dialog && jQuery.fn.tabs ) ) {
 		return;
 	}
-	var msglang = 'zh-hans';
+	var msglang = 'zh-hans',
+		_findRedirectCallbacks = [];
+
 	if ( 'zh-hant|zh-hk|zh-tw|zh-mo'.indexOf( mw.config.get('wgUserVariant') ) > -1 ) {
 		msglang = 'zh-hant';
 	}
+
+	window.toolsRedirect = {
+
+		findRedirectCallback: function( callback ) {
+			/* Add new custom callback for finding new
+			 * potential redirect titles.
+			 *
+			 * @param {function} callback( pagename, $content, titles ) -> title list
+			 */
+			if ( arguments.length === 1 ) {
+				_findRedirectCallbacks.push(callback);
+			}
+			else {
+				jQuery.merge( _findRedirectCallbacks, arguments );
+			}
+			return this;
+		},
+
+		findRedirectBySelector: function( selector ) {
+			/* A shortcut to add CSS selectors as rule to find new potential
+			 * redirect titles.
+			 *
+			 * @param {string} selector
+			 */
+			_findRedirectCallbacks.push( function( pagename, $content ) {
+				return jQuery( selector ).map( function() {
+					var title = $( this ).text();
+					return title ? title : null;
+				} );
+			} );
+			return this;
+		}
+
+	};
+
+
 	importScriptCallback( 'MediaWiki:Gadget-ToolsRedirect-msg-' + msglang + '.js', function() {
 
 		var origPageName = mw.config.get('wgPageName'),
 			scriptPath = mw.config.get('wgScriptPath');
-		window.TR = window.TR || {};
-
-		TR.optionFindBoldsAsTitles = TR.optionFindBoldsAsTitles || false;
-		TR.configMaximumRedirectDepth = TR.configMaximumRedirectDepth || 10;
-
-		jQuery.extend(window.TR, {
+			
+		var _TR = {
 			msg: tools_redirect_msg,
 			tabselem: null,
 			tagselem: null,
@@ -236,7 +270,7 @@ function _initToolsRedirect() {
 			loadCreate: function( reload ) {
 				var self = this;
 				this.loadTabCont( 'create', function( after ) {
-					self.findRedirect( origPageName, after );
+					self.findRedirect( origPageName ).done( after );
 				}, reload );
 			},
 			loadRedirect: function( pagename, container, deep, after ) {
@@ -256,7 +290,8 @@ function _initToolsRedirect() {
 				.done( function( data ) {
 					self.loaded( container );
 					var has_redirect = false,
-						desc = jQuery( 'p.desc', self.tabs.view.cont );
+						desc = jQuery( 'p.desc', self.tabs.view.cont ),
+						maximumRedirectDepth = mw.config.get('toolsRedirectMaximumRedirectDepth', 10);
 
 					jQuery.each( data.query.pages, function( _, page ) {
 						if ( !( 'redirects' in page ) ) {
@@ -278,7 +313,7 @@ function _initToolsRedirect() {
 							}
 							self.buildSelection( { href: baseuri + '&redirect=no', title: rdtitle },
 								methods, ultitle, !deep ).appendTo( entry );
-							if ( deep < self.configMaximumRedirectDepth ) {
+							if ( deep < maximumRedirectDepth ) {
 								self.loadRedirect( rdtitle, entry, deep + 1 );
 							}
 							has_redirect = true;
@@ -312,10 +347,12 @@ function _initToolsRedirect() {
 					}
 				} );
 			},
-			findVariants: function( pagename, titles, callback ) {
-				var xhr,
-					self = this,
-					deferreds = [];
+			findVariants: function( pagename, titles ) {
+				var self = this,
+					suffixReg = /^.+?( \(.+?\))$/,
+					retTitles = [],
+					deferreds = [],
+					deferObj = jQuery.Deferred();
 				$.each( this.variants, function( _, variant ) {
 					deferreds.push( jQuery.ajax( self.buildQuery( {
 						action: 'parse',
@@ -324,24 +361,53 @@ function _initToolsRedirect() {
 						variant: variant
 					} ) ) );
 				} );
-				jQuery.when.apply( jQuery, deferreds ).done( function() {
+				jQuery.when.apply( jQuery, deferreds )
+				.done( function() {
+					var suffixes = [];
+
 					jQuery.each( arguments, function() {
-						var title = this[0].parse.displaytitle;
-						if ( titles.indexOf( title ) === -1 ) {
-							titles.push( title );
+						var suffix,
+							title = this[0].parse.displaytitle;
+
+						// find title suffix,
+						// for example " (济南市)" to "市中区 (济南市)"
+						suffix = suffixReg.exec(title);
+						if ( suffix && suffix.length === 2) {
+							suffix = suffix[1];
+						}
+						else {
+							suffix = null;
+						}
+
+						retTitles.push( title );
+						if ( suffix ) {
+							suffixes.push( suffix );
 						}
 					} );
+
+					// append suffixes
+					jQuery.each( suffixes, function( _, suffix ) {
+						jQuery.merge( retTitles, jQuery.map( titles, function( _, title ) {
+							return suffixReg.test( title ) ? title : title + suffix;
+						} ) );
+					} );
 					
-					callback.call( self, titles );
+					deferObj.resolveWith(self, [ jQuery.unique( retTitles ) ] );
 				} );
+
+				return deferObj.pipe( function ( titles ) {
+					return self.findNotExists( titles );
+				} ).promise();
 			},
-			findNotExists: function( titles, callback ) {
+
+			findNotExists: function( titles ) {
 				var self = this,
 					deferreds = [],
 					alltitles = [],
 					variants = ['zh-hans', 'zh-hant'],
-					excludes = [ '用字模式' ];
-				titles = titles.join('|');
+					excludes = [ '用字模式' ],
+					deferObj = jQuery.Deferred();
+				titles = titles.join( '|' );
 
 				jQuery.each( [ 'zh-hans', 'zh-hant' ], function( idx, variant ) {
 					deferreds.push( jQuery.ajax( self.buildQuery(
@@ -363,20 +429,30 @@ function _initToolsRedirect() {
 								titles.push( title );
 							}
 						} );
-						callback.call( self, titles );
+						deferObj.resolveWith( self, [ titles ] );
 					} );
 				} );
 
+				return deferObj.promise();
 			},
-			findRedirect: function( pagename, after ) {
+
+			findRedirect: function( pagename ) {
 				var self = this,
 					titles = [],
-					container = this.tabs.create.cont;
+					findBoldsAsTitles = mw.config.get('toolsRedirectFindBoldsAsTitles', false),
+					container = this.tabs.create.cont,
+					$content = jQuery( '#mw-content-text' ),
+					deferObj = jQuery.Deferred();
 				this.loading( container );
-				if ( this.optionFindBoldsAsTitles ) {
-					jQuery( 'div#mw-content-text > p > b' ).each( function() {
-						titles.push( jQuery( this ).text() ); } );
-				}
+
+				jQuery.each( _findRedirectCallbacks, function( _, callback ) {
+					jQuery.merge( titles, callback( pagename, $content, titles ) );
+				} );
+
+				// remove all empty titles
+				titles = jQuery.map( titles, function( _, title ) {
+					return title ? title : null;
+				} );
 
 				function onClickCreate( evt ) {
 					/* jshint validthis: true */
@@ -385,51 +461,59 @@ function _initToolsRedirect() {
 					self.clickAction( entry, self.create );
 				}
 
-				this.findVariants( pagename, titles, function( tt ) {
-					self.findNotExists( tt, function( titles ) {
-						self.loaded( container );
-						jQuery.each( titles, function( _, title ) {
-							var ultitle = title.replace( ' ', '_' ),
-								baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
-								entry = jQuery( '<p/>' ).appendTo( container );
-							self.buildSelection(
-								{ href: baseuri + '&action=edit&redlink=1',
-								  title: title,
-								  classname: 'new' },
-								[ { href: '#',
-									title: self.msg.tabcreatetitle,
-									click: onClickCreate
-								} ],
-								ultitle, false
-							).appendTo( entry );
-						} );
-						var desc = jQuery( 'p.desc', container );
-						if ( after )
-							after.call( self, titles.length );
-						if ( titles.length > 0 ) {
-							self.buildMethods( 
-								[ { href: '#',
-										title: self.msg.selectall,
-										click: function( evt ) {
-											evt.preventDefault();
-											self.selectAll( container ); }
-									},
-									{ href: '#',
-										title: self.msg.selectinverse,
-										click: function( evt ) {
-											evt.preventDefault();
-											self.selectInverse( container ); }
-									},
-									{ href: '#',
-										title: self.msg.tabcreatetitle,
-										click: function( evt ) {
-											evt.preventDefault();
-											self.selectAction( container, self.create ); }
-									}
-								] ).appendTo( desc );
-							}
+				this.findVariants( pagename, titles )
+				.done( function ( titles ) {
+					// build HTML
+					self.loaded( container );
+					jQuery.each( titles, function( _, title ) {
+						var ultitle = title.replace( ' ', '_' ),
+							baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
+							entry = jQuery( '<p/>' ).appendTo( container );
+						self.buildSelection(
+							{ href: baseuri + '&action=edit&redlink=1',
+							  title: title,
+							  classname: 'new' },
+							[ { href: '#',
+								title: self.msg.tabcreatetitle,
+								click: onClickCreate
+							} ],
+							ultitle, false
+						).appendTo( entry );
 					} );
+					var desc = jQuery( 'p.desc', container );
+					if ( titles.length > 0 ) {
+						deferObj.resolveWith( self, [ titles ] );
+						self
+						.buildMethods( [ {
+							href: '#',
+							title: self.msg.selectall,
+							click: function( evt ) {
+								evt.preventDefault();
+								self.selectAll( container );
+							}
+						}, {
+							href: '#',
+							title: self.msg.selectinverse,
+							click: function( evt ) {
+								evt.preventDefault();
+								self.selectInverse( container );
+							}
+						}, {
+							href: '#',
+							title: self.msg.tabcreatetitle,
+							click: function( evt ) {
+								evt.preventDefault();
+								self.selectAction( container, self.create );
+							}
+						} ] )
+						.appendTo( desc );
+					}
+					else {
+						deferObj.rejectWith( self, [ titles ] );
+					}
 				} );
+
+				return deferObj.promise();
 			},
 			buildQuery: function( data ) {
 				var query = { url: scriptPath + '/api.php', dataType: 'json', type: 'POST' };
@@ -437,9 +521,9 @@ function _initToolsRedirect() {
 				query.data.format = 'json';
 				return query;
 			}
-		} );
+		};
 
-		TR.init();
+		_TR.init();
 
 	} );
 

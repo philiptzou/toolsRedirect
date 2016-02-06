@@ -1,4 +1,6 @@
 /* vim: set noexpandtab ft=javascript ts=4 sw=4: */
 
-window.TR = window.TR || {};
-TR.optionFindBoldsAsTitles = true;
+jQuery( function() {
+	"use strict";
+	window.toolsRedirect.findRedirectBySelector( 'div#mw-content-text > p > b' );
+} );
