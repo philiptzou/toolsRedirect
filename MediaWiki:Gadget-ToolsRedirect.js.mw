@@ -429,6 +429,7 @@
 		findRedirect: function( pagename ) {
 			var self = this,
 				titles = [],
+				frcDeferreds = [],
 				findBoldsAsTitles = mw.config.get('toolsRedirectFindBoldsAsTitles', false),
 				container = this.tabs.create.cont,
 				$content = jQuery( '#mw-content-text' ),
@@ -436,7 +437,17 @@
 			this.loading( container );
 
 			jQuery.each( _findRedirectCallbacks, function( _, callback ) {
-				jQuery.merge( titles, callback( pagename, $content, titles ) );
+				var ret = callback( pagename, $content, titles );
+				if ( typeof ret === 'string' ) {
+					titles.push( ret );
+				}
+				else if ( jQuery.isArray( ret ) ) {
+					jQuery.merge( titles, ret );
+				}
+				else if ( 'done' in ret ) {
+					// is Deferred
+					frcDeferreds.push( ret );
+				}
 			} );
 
 			// remove all empty titles
@@ -451,7 +462,19 @@
 				self.clickAction( entry, self.create );
 			}
 
-			this.findVariants( pagename, titles )
+			// handles the deferred callbacks
+			jQuery.when.apply( jQuery, frcDeferreds )
+			.pipe( function() {
+				jQuery.each( arguments, function( _, ret ) {
+					if (typeof ret == 'string' ) {
+						titles.push( ret );
+					}
+					else if ( jQuery.isArray( ret ) ) {
+						jQuery.merge( titles, ret );
+					}
+				} );
+				return this.findVariants( pagename, titles );
+			} )
 			.done( function ( titles ) {
 				// build HTML
 				self.loaded( container );
