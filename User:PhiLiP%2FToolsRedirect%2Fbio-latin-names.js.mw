@@ -1,0 +1,27 @@
+/* vim: set noexpandtab ft=javascript ts=4 sw=4: */
+
+jQuery( function( $ ) {
+	"use strict";
+	var prefixReg = /[學学]名\s*：?\s*$/,
+		colonReg = /^\s*[:：]?\s*$/,
+		fdc = window.toolsRedirect.findRedirectCallback;
+
+	fdc( function ( pagename, $content ) {
+		var surname,
+			retTitles = [];
+
+		$content.find( '> p > [lang="la"]' ).each( function() {
+			var prevNode = this.previousSibling;
+			if ( prevNode && colonReg.test( prevNode.textContent ) ) {
+				prevNode = prevNode.previousSibling;
+			}
+			if ( prevNode && prefixReg.test( prevNode.textContent ) ) {
+				// trim() is not supported by IE<9
+				retTitles.push( $( this ).text().replace( /^\s+|\s+$/g, '' ) );
+			}
+		} );
+
+		return $.unique( retTitles );
+	} );
+
+} );

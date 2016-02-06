@@ -71,7 +71,8 @@ jQuery( function( $ ) {
 		$content.find( '> p > b' ).each( function() {
 			var prevNode = this.previousSibling;
 			if ( prevNode && prefixReg.test( prevNode.textContent ) ) {
-				var name = $( this ).text();
+				// trim() is not supported by IE<9
+				var name = $( this ).text().replace( /^\s+|\s+$/g, '' );
 				if ( !surname ) {
 					surname = findSurname( pagename );
 				}
