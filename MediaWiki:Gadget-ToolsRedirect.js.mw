@@ -473,7 +473,7 @@
 						jQuery.merge( titles, ret );
 					}
 				} );
-				return this.findVariants( pagename, titles );
+				return self.findVariants( pagename, titles );
 			} )
 			.done( function ( titles ) {
 				// build HTML
