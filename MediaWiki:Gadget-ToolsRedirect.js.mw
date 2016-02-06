@@ -3,9 +3,6 @@
 ( function ( jQuery ) {
 	"use strict";
 
-	if ( !( jQuery.fn.dialog && jQuery.fn.tabs ) ) {
-		return;
-	}
 	var _TR, msglang = 'zh-hans',
 		origPageName = mw.config.get('wgPageName'),
 		scriptPath = mw.config.get('wgScriptPath'),
