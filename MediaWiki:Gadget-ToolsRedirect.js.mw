@@ -1,17 +1,15 @@
 /* vim: set noexpandtab ft=javascript ts=4 sw=4: */
 
-function _initToolsRedirect() {
+( function ( jQuery ) {
 	"use strict";
 
 	if ( !( jQuery.fn.dialog && jQuery.fn.tabs ) ) {
 		return;
 	}
-	var msglang = 'zh-hans',
+	var _TR, msglang = 'zh-hans',
+		origPageName = mw.config.get('wgPageName'),
+		scriptPath = mw.config.get('wgScriptPath'),
 		_findRedirectCallbacks = [];
-
-	if ( 'zh-hant|zh-hk|zh-tw|zh-mo'.indexOf( mw.config.get('wgUserVariant') ) > -1 ) {
-		msglang = 'zh-hant';
-	}
 
 	window.toolsRedirect = {
 
@@ -47,488 +45,490 @@ function _initToolsRedirect() {
 
 	};
 
-
-	importScriptCallback( 'MediaWiki:Gadget-ToolsRedirect-msg-' + msglang + '.js', function() {
-
-		var origPageName = mw.config.get('wgPageName'),
-			scriptPath = mw.config.get('wgScriptPath');
-			
-		var _TR = {
-			msg: tools_redirect_msg,
-			tabselem: null,
-			tagselem: null,
-			variants: ['zh-cn', 'zh-hk', 'zh-mo', 'zh-sg', 'zh-tw'],
-			init: function() {
-				var self = this,
-						btn = jQuery( '<li id="ca-redirect"><span><a title="' +
-													this.msg.btndesc + '">' + this.msg.btntitle +
-													'</a></span></li>' );
-				btn.click( function( evt ) {
+	_TR = {
+		msg: null,
+		tabselem: null,
+		tagselem: null,
+		variants: ['zh-cn', 'zh-hk', 'zh-mo', 'zh-sg', 'zh-tw'],
+		init: function() {
+			var self = this,
+					btn = jQuery( '<li id="ca-redirect"><span><a title="' +
+												this.msg.btndesc + '">' + this.msg.btntitle +
+												'</a></span></li>' );
+			btn.click( function( evt ) {
+				evt.preventDefault();
+				self.dialog();
+			} );
+			jQuery( 'li#ca-history' ).after( btn );
+		},
+		dialog: function() {
+			var dlg = jQuery( '<div class="dialog-redirect" title="' +
+												this.msg.dlgtitle + '">' )
+			.dialog( {
+				bgiframe: true, resizable: false, modal: true, width: 600 } );
+			this.tabselem = jQuery( '<div class="tab-redirect">' ).appendTo( dlg );
+			this.tagselem = jQuery( '<ul>' ).appendTo( this.tabselem );
+			this.addTabs();
+			this.tabselem.tabs();
+		},
+		addTabs: function() {
+			for ( var kname in this.tabs ) {
+				if ( this.tabs[kname] === null ) {
+					this.tabs[kname] = this['_initTab' + kname[0].charAt(0).toUpperCase() + kname.slice(1)]();
+				}
+				var tab = this.tabs[kname];
+				this.tagselem.append( tab.tag );
+				this.tabselem.append( tab.cont );
+			}
+			// default tab, autoload when dialog initiate
+			this.loadView();
+		},
+		createTab: function( tabname, tabtitle, callback ) {
+			var self = this,
+					tag = jQuery( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
+					cont = jQuery( '<div id="tab-' + tabname + '"/>' );
+			jQuery( 'a', tag ).click(
+				function( evt ) {
 					evt.preventDefault();
-					self.dialog();
-				} );
-				jQuery( 'li#ca-history' ).after( btn );
-			},
-			dialog: function() {
-				var dlg = jQuery( '<div class="dialog-redirect" title="' +
-													this.msg.dlgtitle + '">' )
-				.dialog( {
-					bgiframe: true, resizable: false, modal: true, width: 600 } );
-				this.tabselem = jQuery( '<div class="tab-redirect">' ).appendTo( dlg );
-				this.tagselem = jQuery( '<ul>' ).appendTo( this.tabselem );
-				this.addTabs();
-				this.tabselem.tabs();
-			},
-			addTabs: function() {
-				for ( var kname in this.tabs ) {
-					if ( this.tabs[kname] === null ) {
-						this.tabs[kname] = this['_initTab' + kname[0].charAt(0).toUpperCase() + kname.slice(1)]();
-					}
-					var tab = this.tabs[kname];
-					this.tagselem.append( tab.tag );
-					this.tabselem.append( tab.cont );
+					self.tabselem.tabs( 'select', '#tab-' + tabname );
+					callback.call( self );
 				}
-				// default tab, autoload when dialog initiate
-				this.loadView();
-			},
-			createTab: function( tabname, tabtitle, callback ) {
-				var self = this,
-						tag = jQuery( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
-						cont = jQuery( '<div id="tab-' + tabname + '"/>' );
-				jQuery( 'a', tag ).click(
-					function( evt ) {
-						evt.preventDefault();
-						self.tabselem.tabs( 'select', '#tab-' + tabname );
-						callback.call( self );
-					}
-				);
-				return { 'tag': tag, 'cont': cont, loaded: false };
-			},
-			_initTabView: function() {
-				return this.createTab( 'view', this.msg.tabviewtitle, this.loadView );
-			},
-			_initTabCreate: function() {
-				return this.createTab( 'create', this.msg.tabcreatetitle, this.loadCreate );
-			},
-			tabs: {
-				view: null,
-				create: null
-			},
-			fix: function( pagenames ) {
-				var self = this,
-						desc = jQuery( 'p.desc', this.tabs.view.cont ).text( this.msg.fixloading );
-				jQuery( 'p[class!=desc]', this.tabs.view.cont ).remove();
-				this.loading( this.tabs.view.cont );
-				this.bulkEdit(
-					pagenames,
-					this.msg.fixtext.replace( '$1', origPageName ),
-					this.msg.fixsummary, function() {
-						// delay load before the asynchronous tasks on server finished
-						setTimeout( function() {
-							self.loaded( self.tabs.view.cont );
-							self.loadView( true );
-						}, 1500 );
-					}
-				);
-			},
-			create: function( pagenames ) {
-				var self = this,
-						desc = jQuery( 'p.desc', this.tabs.create.cont ).text( this.msg.createloading );
-				jQuery( 'p[class!=desc]', this.tabs.create.cont ).remove();
-				this.loading( this.tabs.create.cont );
-				this.bulkEdit(
-					pagenames,
-					this.msg.createtext.replace( '$1', origPageName ),
-					this.msg.createsummary.replace( '$1', origPageName ), function() {
-						// delay load before the asynchronous tasks on server finished
-						setTimeout( function() {
-							self.loaded( self.tabs.create.cont );
-							self.tabs.view.loaded = false;
-							self.loadCreate( true );
-						}, 1500 );
-					}
-				);
-			},
-			bulkEdit: function( titles, text, summary, callback ) {
-				var self = this;
-				titles = titles.join( '|' );
-				jQuery.ajax( this.buildQuery(
-					{ action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' } ) )
-				.done( function( data ) {
-					var deferreds = [];
-					jQuery.each( data.query.pages, function( idx, page ) {
-						deferreds.push( jQuery.ajax(
-							self.buildQuery( {
-								action: 'edit', title: page.title, token: page.edittoken,
-								'text': text, 'summary': summary } )
-						) );
-					});
-					jQuery.when.apply( jQuery, deferreds ).done( function() {
-						callback.call( self );
-					} );
-				} );
-			},
-			reloadTabCont: function( tabname, callback ) {
-				var tab = this.tabs[tabname];
-				tab.loaded = false;
-				this.loadTabCont( tabname, callback );
-			},
-			loadTabCont: function( tabname, callback, reload ) {
-				var self = this,
-						tab = this.tabs[tabname];
-				if ( reload ) tab.loaded = false;
-				if ( !tab.loaded ) {
-					tab.cont.html( '' );
-					var desc = jQuery( '<p class="desc">' +
-						this.msg.rediloading + '</p>' ).appendTo( tab.cont );
-					callback.call( this, function( success ) {
-						if ( success ) desc.text( self.msg['tab' + tabname + 'desc'] );
-						else desc.text( self.msg['tab' + tabname + 'notfound'] );
-					} );
-					tab.loaded = true;
+			);
+			return { 'tag': tag, 'cont': cont, loaded: false };
+		},
+		_initTabView: function() {
+			return this.createTab( 'view', this.msg.tabviewtitle, this.loadView );
+		},
+		_initTabCreate: function() {
+			return this.createTab( 'create', this.msg.tabcreatetitle, this.loadCreate );
+		},
+		tabs: {
+			view: null,
+			create: null
+		},
+		fix: function( pagenames ) {
+			var self = this,
+					desc = jQuery( 'p.desc', this.tabs.view.cont ).text( this.msg.fixloading );
+			jQuery( 'p[class!=desc]', this.tabs.view.cont ).remove();
+			this.loading( this.tabs.view.cont );
+			this.bulkEdit(
+				pagenames,
+				this.msg.fixtext.replace( '$1', origPageName ),
+				this.msg.fixsummary, function() {
+					// delay load before the asynchronous tasks on server finished
+					setTimeout( function() {
+						self.loaded( self.tabs.view.cont );
+						self.loadView( true );
+					}, 1500 );
 				}
-			},
-			loading: function( container ) {
-				if ( container.prop( 'tagName' ).toLowerCase() == 'span' ) {
-					container.addClass( 'mw-ajax-loader' );
-				} else if ( jQuery( 'span.mw-ajax-loader', container ).length === 0 ) {
-					jQuery( '<span class="mw-ajax-loader"></span>' ).appendTo( container );
+			);
+		},
+		create: function( pagenames ) {
+			var self = this,
+					desc = jQuery( 'p.desc', this.tabs.create.cont ).text( this.msg.createloading );
+			jQuery( 'p[class!=desc]', this.tabs.create.cont ).remove();
+			this.loading( this.tabs.create.cont );
+			this.bulkEdit(
+				pagenames,
+				this.msg.createtext.replace( '$1', origPageName ),
+				this.msg.createsummary.replace( '$1', origPageName ), function() {
+					// delay load before the asynchronous tasks on server finished
+					setTimeout( function() {
+						self.loaded( self.tabs.create.cont );
+						self.tabs.view.loaded = false;
+						self.loadCreate( true );
+					}, 1500 );
 				}
-			},
-			loaded: function( container ) {
-				if ( container.prop( 'tagName' ).toLowerCase() == 'span' ) {
-					container.removeClass( 'mw-ajax-loader' );
-				} else {
-					jQuery( 'span.mw-ajax-loader', container ).remove();
-				}
-			},
-			selectAll: function( cont ) {
-				jQuery( 'input[type=checkbox]:not(:disabled)', cont )
-					.attr( 'checked', true );
-			},
-			selectInverse: function( cont ) {
-				jQuery( 'input[type=checkbox]:not(:disabled)', cont )
-					.each( function() {
-						var e = jQuery( this );
-						e.attr( 'checked', !e.attr( 'checked' ) );
-					} ); 
-			},
-			selectAction: function( cont, cb ) {
-				var pagenames = [];
-				jQuery( 'input[type=checkbox]:checked', cont )
-				.each( function() {
-					pagenames.push( jQuery( this ).data( 'page-title' ) );
-				} );
-				if ( pagenames.length )
-					cb.call( this, pagenames );
-			},
-			clickAction: function( cont, cb ) {
-				var pagename = jQuery( 'input[type="checkbox"]', cont ).data( 'page-title' );
-				cb.call( this, [pagename] );
-			},
-			buildLink: function( attr ) {
-				var a = jQuery(
-					'<a href="' + attr.href + '" title="' + attr.title +
-					'" target="blank">' + attr.title + '</a>' );
-				if ( attr.click )
-					a.click( attr.click );
-				if ( attr.classname )
-					a.addClass( attr.classname );
-				return a;
-			},
-			buildMethods: function( methods ) {
-				var self = this,
-						$container = jQuery( '<span/>' ),
-						methodLength = methods.length;
-				$container.append( methodLength ? ' (' : '' );
-				jQuery.each( methods, function( idx, method ) {
-					self.buildLink( method ).appendTo( $container );
-					if ( idx + 1 < methodLength ) {
-						$container.append( '<span class="gap">|</span>' );
-					}
-				} );
-				$container.append( methodLength ? ')' : '' );
-				return $container;
-			},
-			buildSelection: function( main, metd, mt, dsab ) {
-				var cont = jQuery( '<span/>' );
-				var sele = jQuery( '<input type="checkbox"/>' ).appendTo( cont );
-				this.buildLink( main).appendTo( cont );
-				this.buildMethods( metd ).appendTo( cont );
-				sele.data( 'page-title', mt );
-				if ( dsab ) {
-					sele.attr( 'disabled', true );
-				}
-				return cont;
-			},
-			loadView: function( reload ) {
-				var self = this;
-				this.loadTabCont( 'view', function( after ) {
-					self.loadRedirect( origPageName, self.tabs.view.cont, 0, after );
-				}, reload );
-			},
-			loadCreate: function( reload ) {
-				var self = this;
-				this.loadTabCont( 'create', function( after ) {
-					self.findRedirect( origPageName ).done( after );
-				}, reload );
-			},
-			loadRedirect: function( pagename, container, deep, after ) {
-				this.loading( container );
-				var self = this,
-					top = deep ? jQuery( '<dl/>' ).appendTo( container ) : container;
-
-				function onClickFix( evt ) {
-					/* jshint validthis: true */
-					var entry = $( this ).parents( 'dd, p' ).first();
-					evt.preventDefault();
-					self.clickAction( entry, self.fix );
-				}
-
-				jQuery.ajax( this.buildQuery(
-					{ action: 'query', prop: 'redirects', titles: pagename, rdlimit: 'max' } ) )
-				.done( function( data ) {
-					self.loaded( container );
-					var has_redirect = false,
-						desc = jQuery( 'p.desc', self.tabs.view.cont ),
-						maximumRedirectDepth = mw.config.get('toolsRedirectMaximumRedirectDepth', 10);
-
-					jQuery.each( data.query.pages, function( _, page ) {
-						if ( !( 'redirects' in page ) ) {
-							return;
-						}
-						jQuery.each( page.redirects, function( _, rdpage ) {
-							var rdtitle = rdpage.title,
-								ultitle = rdtitle.replace( / /g, '_' ),
-								baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
-								entry = ( deep ? jQuery( '<dd/>' ) : jQuery( '<p/>' ) ).appendTo( top ),
-								methods = [ {href: baseuri + '&action=edit',
-											 title: self.msg.rediedit } ];
-							if ( deep ) {
-								methods.push({
-									href: '#',
-									title: self.msg.tabviewfix,
-									click: onClickFix
-								} );
-							}
-							self.buildSelection( { href: baseuri + '&redirect=no', title: rdtitle },
-								methods, ultitle, !deep ).appendTo( entry );
-							if ( deep < maximumRedirectDepth ) {
-								self.loadRedirect( rdtitle, entry, deep + 1 );
-							}
-							has_redirect = true;
-						} );
-					} );
-
-					if ( after ) {
-						after.call( self, has_redirect );
-					}
-					else if ( has_redirect && jQuery( 'a', desc ).length === 0 ) {
-						self.buildMethods(
-							[ { href: '#',
-								title: self.msg.selectall,
-								click: function( evt ) {
-									evt.preventDefault();
-									self.selectAll( self.tabs.view.cont ); }
-							},
-							{ href: '#',
-								title: self.msg.selectinverse,
-								click: function( evt ) {
-									evt.preventDefault();
-									self.selectInverse( self.tabs.view.cont ); }
-							},
-							{ href: '#',
-								title: self.msg.tabviewfix,
-								click: function( evt ) {
-									evt.preventDefault();
-									self.selectAction( self.tabs.view.cont, self.fix ); }
-							} ]
-						).appendTo( desc );
-					}
-				} );
-			},
-			findVariants: function( pagename, titles ) {
-				var self = this,
-					suffixReg = /^.+?( \(.+?\))$/,
-					retTitles = [],
-					deferreds = [],
-					deferObj = jQuery.Deferred();
-				$.each( this.variants, function( _, variant ) {
-					deferreds.push( jQuery.ajax( self.buildQuery( {
-						action: 'parse',
-						page: pagename,
-						prop: 'displaytitle',
-						variant: variant
-					} ) ) );
-				} );
-				jQuery.when.apply( jQuery, deferreds )
-				.done( function() {
-					var suffixes = [];
-
-					jQuery.each( arguments, function() {
-						var suffix,
-							title = this[0].parse.displaytitle;
-
-						// find title suffix,
-						// for example " (济南市)" to "市中区 (济南市)"
-						suffix = suffixReg.exec(title);
-						if ( suffix && suffix.length === 2) {
-							suffix = suffix[1];
-						}
-						else {
-							suffix = null;
-						}
-
-						retTitles.push( title );
-						if ( suffix ) {
-							suffixes.push( suffix );
-						}
-					} );
-
-					// append suffixes
-					jQuery.each( suffixes, function( _, suffix ) {
-						jQuery.merge( retTitles, jQuery.map( titles, function( _, title ) {
-							return suffixReg.test( title ) ? title : title + suffix;
-						} ) );
-					} );
-					
-					deferObj.resolveWith(self, [ jQuery.unique( retTitles ) ] );
-				} );
-
-				return deferObj.pipe( function ( titles ) {
-					return self.findNotExists( titles );
-				} ).promise();
-			},
-
-			findNotExists: function( titles ) {
-				var self = this,
-					deferreds = [],
-					alltitles = [],
-					variants = ['zh-hans', 'zh-hant'],
-					excludes = [ '用字模式' ],
-					deferObj = jQuery.Deferred();
-				titles = titles.join( '|' );
-
-				jQuery.each( [ 'zh-hans', 'zh-hant' ], function( idx, variant ) {
-					deferreds.push( jQuery.ajax( self.buildQuery(
-						{ action: 'parse', text: titles, prop: 'text', variant: variant } ) ) );
-				} );
-
+			);
+		},
+		bulkEdit: function( titles, text, summary, callback ) {
+			var self = this;
+			titles = titles.join( '|' );
+			jQuery.ajax( this.buildQuery(
+				{ action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' } ) )
+			.done( function( data ) {
+				var deferreds = [];
+				jQuery.each( data.query.pages, function( idx, page ) {
+					deferreds.push( jQuery.ajax(
+						self.buildQuery( {
+							action: 'edit', title: page.title, token: page.edittoken,
+							'text': text, 'summary': summary } )
+					) );
+				});
 				jQuery.when.apply( jQuery, deferreds ).done( function() {
-					jQuery.each( arguments, function() {
-						alltitles = alltitles.concat( jQuery( this[0].parse.text['*'] )
-													  .text().replace( /(^\s*|\s*$)/g, '' ).split( '|' ) );
-					} );
-					alltitles = alltitles.join( '|' );
-					jQuery.ajax( self.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles } ) )
-					.done( function( data ) {
-						titles = [];
-						jQuery.each( data.query.pages, function( pageid, page ) {
-							var title = page.title;
-							if ( pageid < 0 && excludes.indexOf( title ) === -1 ) {
-								titles.push( title );
-							}
-						} );
-						deferObj.resolveWith( self, [ titles ] );
-					} );
+					callback.call( self );
 				} );
-
-				return deferObj.promise();
-			},
-
-			findRedirect: function( pagename ) {
-				var self = this,
-					titles = [],
-					findBoldsAsTitles = mw.config.get('toolsRedirectFindBoldsAsTitles', false),
-					container = this.tabs.create.cont,
-					$content = jQuery( '#mw-content-text' ),
-					deferObj = jQuery.Deferred();
-				this.loading( container );
-
-				jQuery.each( _findRedirectCallbacks, function( _, callback ) {
-					jQuery.merge( titles, callback( pagename, $content, titles ) );
+			} );
+		},
+		reloadTabCont: function( tabname, callback ) {
+			var tab = this.tabs[tabname];
+			tab.loaded = false;
+			this.loadTabCont( tabname, callback );
+		},
+		loadTabCont: function( tabname, callback, reload ) {
+			var self = this,
+					tab = this.tabs[tabname];
+			if ( reload ) tab.loaded = false;
+			if ( !tab.loaded ) {
+				tab.cont.html( '' );
+				var desc = jQuery( '<p class="desc">' +
+					this.msg.rediloading + '</p>' ).appendTo( tab.cont );
+				callback.call( this, function( success ) {
+					if ( success ) desc.text( self.msg['tab' + tabname + 'desc'] );
+					else desc.text( self.msg['tab' + tabname + 'notfound'] );
 				} );
-
-				// remove all empty titles
-				titles = jQuery.map( titles, function( _, title ) {
-					return title ? title : null;
-				} );
-
-				function onClickCreate( evt ) {
-					/* jshint validthis: true */
-					var entry = $( this ).parents( 'p:first' );
-					evt.preventDefault();
-					self.clickAction( entry, self.create );
+				tab.loaded = true;
+			}
+		},
+		loading: function( container ) {
+			if ( container.prop( 'tagName' ).toLowerCase() == 'span' ) {
+				container.addClass( 'mw-ajax-loader' );
+			} else if ( jQuery( 'span.mw-ajax-loader', container ).length === 0 ) {
+				jQuery( '<span class="mw-ajax-loader"></span>' ).appendTo( container );
+			}
+		},
+		loaded: function( container ) {
+			if ( container.prop( 'tagName' ).toLowerCase() == 'span' ) {
+				container.removeClass( 'mw-ajax-loader' );
+			} else {
+				jQuery( 'span.mw-ajax-loader', container ).remove();
+			}
+		},
+		selectAll: function( cont ) {
+			jQuery( 'input[type=checkbox]:not(:disabled)', cont )
+				.attr( 'checked', true );
+		},
+		selectInverse: function( cont ) {
+			jQuery( 'input[type=checkbox]:not(:disabled)', cont )
+				.each( function() {
+					var e = jQuery( this );
+					e.attr( 'checked', !e.attr( 'checked' ) );
+				} ); 
+		},
+		selectAction: function( cont, cb ) {
+			var pagenames = [];
+			jQuery( 'input[type=checkbox]:checked', cont )
+			.each( function() {
+				pagenames.push( jQuery( this ).data( 'page-title' ) );
+			} );
+			if ( pagenames.length )
+				cb.call( this, pagenames );
+		},
+		clickAction: function( cont, cb ) {
+			var pagename = jQuery( 'input[type="checkbox"]', cont ).data( 'page-title' );
+			cb.call( this, [pagename] );
+		},
+		buildLink: function( attr ) {
+			var a = jQuery(
+				'<a href="' + attr.href + '" title="' + attr.title +
+				'" target="blank">' + attr.title + '</a>' );
+			if ( attr.click )
+				a.click( attr.click );
+			if ( attr.classname )
+				a.addClass( attr.classname );
+			return a;
+		},
+		buildMethods: function( methods ) {
+			var self = this,
+					$container = jQuery( '<span/>' ),
+					methodLength = methods.length;
+			$container.append( methodLength ? ' (' : '' );
+			jQuery.each( methods, function( idx, method ) {
+				self.buildLink( method ).appendTo( $container );
+				if ( idx + 1 < methodLength ) {
+					$container.append( '<span class="gap">|</span>' );
 				}
+			} );
+			$container.append( methodLength ? ')' : '' );
+			return $container;
+		},
+		buildSelection: function( main, metd, mt, dsab ) {
+			var cont = jQuery( '<span/>' );
+			var sele = jQuery( '<input type="checkbox"/>' ).appendTo( cont );
+			this.buildLink( main).appendTo( cont );
+			this.buildMethods( metd ).appendTo( cont );
+			sele.data( 'page-title', mt );
+			if ( dsab ) {
+				sele.attr( 'disabled', true );
+			}
+			return cont;
+		},
+		loadView: function( reload ) {
+			var self = this;
+			this.loadTabCont( 'view', function( after ) {
+				self.loadRedirect( origPageName, self.tabs.view.cont, 0, after );
+			}, reload );
+		},
+		loadCreate: function( reload ) {
+			var self = this;
+			this.loadTabCont( 'create', function( after ) {
+				self.findRedirect( origPageName ).done( after );
+			}, reload );
+		},
+		loadRedirect: function( pagename, container, deep, after ) {
+			this.loading( container );
+			var self = this,
+				top = deep ? jQuery( '<dl/>' ).appendTo( container ) : container;
 
-				this.findVariants( pagename, titles )
-				.done( function ( titles ) {
-					// build HTML
-					self.loaded( container );
-					jQuery.each( titles, function( _, title ) {
-						var ultitle = title.replace( ' ', '_' ),
+			function onClickFix( evt ) {
+				/* jshint validthis: true */
+				var entry = $( this ).parents( 'dd, p' ).first();
+				evt.preventDefault();
+				self.clickAction( entry, self.fix );
+			}
+
+			jQuery.ajax( this.buildQuery(
+				{ action: 'query', prop: 'redirects', titles: pagename, rdlimit: 'max' } ) )
+			.done( function( data ) {
+				self.loaded( container );
+				var has_redirect = false,
+					desc = jQuery( 'p.desc', self.tabs.view.cont ),
+					maximumRedirectDepth = mw.config.get('toolsRedirectMaximumRedirectDepth', 10);
+
+				jQuery.each( data.query.pages, function( _, page ) {
+					if ( !( 'redirects' in page ) ) {
+						return;
+					}
+					jQuery.each( page.redirects, function( _, rdpage ) {
+						var rdtitle = rdpage.title,
+							ultitle = rdtitle.replace( / /g, '_' ),
 							baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
-							entry = jQuery( '<p/>' ).appendTo( container );
-						self.buildSelection(
-							{ href: baseuri + '&action=edit&redlink=1',
-							  title: title,
-							  classname: 'new' },
-							[ { href: '#',
-								title: self.msg.tabcreatetitle,
-								click: onClickCreate
-							} ],
-							ultitle, false
-						).appendTo( entry );
+							entry = ( deep ? jQuery( '<dd/>' ) : jQuery( '<p/>' ) ).appendTo( top ),
+							methods = [ {href: baseuri + '&action=edit',
+										 title: self.msg.rediedit } ];
+						if ( deep ) {
+							methods.push({
+								href: '#',
+								title: self.msg.tabviewfix,
+								click: onClickFix
+							} );
+						}
+						self.buildSelection( { href: baseuri + '&redirect=no', title: rdtitle },
+							methods, ultitle, !deep ).appendTo( entry );
+						if ( deep < maximumRedirectDepth ) {
+							self.loadRedirect( rdtitle, entry, deep + 1 );
+						}
+						has_redirect = true;
 					} );
-					var desc = jQuery( 'p.desc', container );
-					if ( titles.length > 0 ) {
-						deferObj.resolveWith( self, [ titles ] );
-						self
-						.buildMethods( [ {
-							href: '#',
+				} );
+
+				if ( after ) {
+					after.call( self, has_redirect );
+				}
+				else if ( has_redirect && jQuery( 'a', desc ).length === 0 ) {
+					self.buildMethods(
+						[ { href: '#',
 							title: self.msg.selectall,
 							click: function( evt ) {
 								evt.preventDefault();
-								self.selectAll( container );
-							}
-						}, {
-							href: '#',
+								self.selectAll( self.tabs.view.cont ); }
+						},
+						{ href: '#',
 							title: self.msg.selectinverse,
 							click: function( evt ) {
 								evt.preventDefault();
-								self.selectInverse( container );
-							}
-						}, {
-							href: '#',
-							title: self.msg.tabcreatetitle,
+								self.selectInverse( self.tabs.view.cont ); }
+						},
+						{ href: '#',
+							title: self.msg.tabviewfix,
 							click: function( evt ) {
 								evt.preventDefault();
-								self.selectAction( container, self.create );
-							}
-						} ] )
-						.appendTo( desc );
+								self.selectAction( self.tabs.view.cont, self.fix ); }
+						} ]
+					).appendTo( desc );
+				}
+			} );
+		},
+		findVariants: function( pagename, titles ) {
+			var self = this,
+				suffixReg = /^.+?( \(.+?\))$/,
+				retTitles = [],
+				deferreds = [],
+				deferObj = jQuery.Deferred();
+			$.each( this.variants, function( _, variant ) {
+				deferreds.push( jQuery.ajax( self.buildQuery( {
+					action: 'parse',
+					page: pagename,
+					prop: 'displaytitle',
+					variant: variant
+				} ) ) );
+			} );
+			jQuery.when.apply( jQuery, deferreds )
+			.done( function() {
+				var suffixes = [];
+
+				jQuery.each( arguments, function() {
+					var suffix,
+						title = this[0].parse.displaytitle;
+
+					// find title suffix,
+					// for example " (济南市)" to "市中区 (济南市)"
+					suffix = suffixReg.exec(title);
+					if ( suffix && suffix.length === 2) {
+						suffix = suffix[1];
 					}
 					else {
-						deferObj.rejectWith( self, [ titles ] );
+						suffix = null;
+					}
+
+					retTitles.push( title );
+					if ( suffix ) {
+						suffixes.push( suffix );
 					}
 				} );
 
-				return deferObj.promise();
-			},
-			buildQuery: function( data ) {
-				var query = { url: scriptPath + '/api.php', dataType: 'json', type: 'POST' };
-				query.data = data;
-				query.data.format = 'json';
-				return query;
-			}
-		};
+				// append suffixes
+				jQuery.each( suffixes, function( _, suffix ) {
+					jQuery.merge( retTitles, jQuery.map( titles, function( _, title ) {
+						return suffixReg.test( title ) ? title : title + suffix;
+					} ) );
+				} );
+				
+				deferObj.resolveWith(self, [ jQuery.unique( retTitles ) ] );
+			} );
 
-		_TR.init();
+			return deferObj.pipe( function ( titles ) {
+				return self.findNotExists( titles );
+			} ).promise();
+		},
+
+		findNotExists: function( titles ) {
+			var self = this,
+				deferreds = [],
+				alltitles = [],
+				variants = ['zh-hans', 'zh-hant'],
+				excludes = [ '用字模式' ],
+				deferObj = jQuery.Deferred();
+			titles = titles.join( '|' );
+
+			jQuery.each( [ 'zh-hans', 'zh-hant' ], function( idx, variant ) {
+				deferreds.push( jQuery.ajax( self.buildQuery(
+					{ action: 'parse', text: titles, prop: 'text', variant: variant } ) ) );
+			} );
+
+			jQuery.when.apply( jQuery, deferreds ).done( function() {
+				jQuery.each( arguments, function() {
+					alltitles = alltitles.concat( jQuery( this[0].parse.text['*'] )
+												  .text().replace( /(^\s*|\s*$)/g, '' ).split( '|' ) );
+				} );
+				alltitles = alltitles.join( '|' );
+				jQuery.ajax( self.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles } ) )
+				.done( function( data ) {
+					titles = [];
+					jQuery.each( data.query.pages, function( pageid, page ) {
+						var title = page.title;
+						if ( pageid < 0 && excludes.indexOf( title ) === -1 ) {
+							titles.push( title );
+						}
+					} );
+					deferObj.resolveWith( self, [ titles ] );
+				} );
+			} );
+
+			return deferObj.promise();
+		},
+
+		findRedirect: function( pagename ) {
+			var self = this,
+				titles = [],
+				findBoldsAsTitles = mw.config.get('toolsRedirectFindBoldsAsTitles', false),
+				container = this.tabs.create.cont,
+				$content = jQuery( '#mw-content-text' ),
+				deferObj = jQuery.Deferred();
+			this.loading( container );
+
+			jQuery.each( _findRedirectCallbacks, function( _, callback ) {
+				jQuery.merge( titles, callback( pagename, $content, titles ) );
+			} );
+
+			// remove all empty titles
+			titles = jQuery.map( titles, function( _, title ) {
+				return title ? title : null;
+			} );
+
+			function onClickCreate( evt ) {
+				/* jshint validthis: true */
+				var entry = $( this ).parents( 'p:first' );
+				evt.preventDefault();
+				self.clickAction( entry, self.create );
+			}
+
+			this.findVariants( pagename, titles )
+			.done( function ( titles ) {
+				// build HTML
+				self.loaded( container );
+				jQuery.each( titles, function( _, title ) {
+					var ultitle = title.replace( ' ', '_' ),
+						baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
+						entry = jQuery( '<p/>' ).appendTo( container );
+					self.buildSelection(
+						{ href: baseuri + '&action=edit&redlink=1',
+						  title: title,
+						  classname: 'new' },
+						[ { href: '#',
+							title: self.msg.tabcreatetitle,
+							click: onClickCreate
+						} ],
+						ultitle, false
+					).appendTo( entry );
+				} );
+				var desc = jQuery( 'p.desc', container );
+				if ( titles.length > 0 ) {
+					deferObj.resolveWith( self, [ titles ] );
+					self
+					.buildMethods( [ {
+						href: '#',
+						title: self.msg.selectall,
+						click: function( evt ) {
+							evt.preventDefault();
+							self.selectAll( container );
+						}
+					}, {
+						href: '#',
+						title: self.msg.selectinverse,
+						click: function( evt ) {
+							evt.preventDefault();
+							self.selectInverse( container );
+						}
+					}, {
+						href: '#',
+						title: self.msg.tabcreatetitle,
+						click: function( evt ) {
+							evt.preventDefault();
+							self.selectAction( container, self.create );
+						}
+					} ] )
+					.appendTo( desc );
+				}
+				else {
+					deferObj.rejectWith( self, [ titles ] );
+				}
+			} );
+
+			return deferObj.promise();
+		},
+		buildQuery: function( data ) {
+			var query = { url: scriptPath + '/api.php', dataType: 'json', type: 'POST' };
+			query.data = data;
+			query.data.format = 'json';
+			return query;
+		}
+	};
+
+	if ( 'zh-hant|zh-hk|zh-tw|zh-mo'.indexOf( mw.config.get('wgUserVariant') ) > -1 ) {
+		msglang = 'zh-hant';
+	}
+
+	importScriptCallback( 'MediaWiki:Gadget-ToolsRedirect-msg-' + msglang + '.js', function() {
+
+		_TR.msg = window.tools_redirect_msg;
+			
+		jQuery( function() {
+			mw.loader.using( ['jquery.ui.dialog', 'jquery.ui.tabs'], function () {
+				_TR.init();
+			} );
+		} );
 
 	} );
 
-}
-
-jQuery( function() {
-	mw.loader.using( ['jquery.ui.dialog', 'jquery.ui.tabs'], _initToolsRedirect, _initToolsRedirect );
-} );
+} )( jQuery );
