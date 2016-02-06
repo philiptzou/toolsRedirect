@@ -262,7 +262,13 @@
 		loadCreate: function( reload ) {
 			var self = this;
 			this.loadTabCont( 'create', function( after ) {
-				self.findRedirect( origPageName ).done( after );
+				self.findRedirect( origPageName )
+				.done( function() {
+					after.call( self, true );
+				} )
+				.fail( function() {
+					after.call( self, false );
+				} );
 			}, reload );
 		},
 		loadRedirect: function( pagename, container, deep, after ) {
