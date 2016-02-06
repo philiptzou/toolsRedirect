@@ -368,17 +368,15 @@
 						suffix = suffix[1];
 					}
 					else {
-						suffix = null;
+						suffix = '';
 					}
 
 					retTitles.push( title );
-					if ( suffix ) {
-						suffixes.push( suffix );
-					}
+					suffixes.push( suffix );
 				} );
 
 				// append suffixes
-				jQuery.each( suffixes, function( _, suffix ) {
+				jQuery.each( jQuery.unique( suffixes ), function( _, suffix ) {
 					jQuery.merge( retTitles, jQuery.map( titles, function( title ) {
 						return suffixReg.test( title ) ? title : title + suffix;
 					} ) );
