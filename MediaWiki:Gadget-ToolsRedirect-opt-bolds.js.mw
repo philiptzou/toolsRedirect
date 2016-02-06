@@ -2,5 +2,5 @@
 
 mw.loader.using( ['ext.gadget.ToolsRedirect'], function() {
 	"use strict";
-	window.toolsRedirect.findRedirectBySelector( 'div#mw-content-text > p > b' );
+	mw.toolsRedirect.findRedirectBySelector( 'div#mw-content-text > p > b' );
 } );

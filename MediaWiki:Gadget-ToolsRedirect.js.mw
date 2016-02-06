@@ -11,7 +11,7 @@
 		scriptPath = mw.config.get('wgScriptPath'),
 		_findRedirectCallbacks = [];
 
-	window.toolsRedirect = {
+	mw.toolsRedirect = {
 
 		findRedirectCallback: function( callback ) {
 			/* Add new custom callback for finding new

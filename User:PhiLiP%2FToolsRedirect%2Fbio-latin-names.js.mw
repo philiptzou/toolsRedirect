@@ -4,7 +4,7 @@ mw.loader.using( ['ext.gadget.ToolsRedirect'], function() {
 	"use strict";
 	var prefixReg = /[學学]名\s*：?\s*$/,
 		colonReg = /^\s*[:：]?\s*$/,
-		fdc = window.toolsRedirect.findRedirectCallback;
+		fdc = mw.toolsRedirect.findRedirectCallback;
 
 	fdc( function ( pagename, $content ) {
 		var surname,
