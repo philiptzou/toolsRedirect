@@ -379,7 +379,7 @@
 
 				// append suffixes
 				jQuery.each( suffixes, function( _, suffix ) {
-					jQuery.merge( retTitles, jQuery.map( titles, function( _, title ) {
+					jQuery.merge( retTitles, jQuery.map( titles, function( title ) {
 						return suffixReg.test( title ) ? title : title + suffix;
 					} ) );
 				} );
@@ -442,7 +442,7 @@
 			} );
 
 			// remove all empty titles
-			titles = jQuery.map( titles, function( _, title ) {
+			titles = jQuery.map( titles, function( title ) {
 				return title ? title : null;
 			} );
 
