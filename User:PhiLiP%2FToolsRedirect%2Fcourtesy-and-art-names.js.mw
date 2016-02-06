@@ -70,7 +70,7 @@ jQuery( function( $ ) {
 
 		$content.find( '> p > b' ).each( function() {
 			var prevNode = this.previousSibling;
-			if ( regex.test( prevNode.textContent ) ) {
+			if ( prefixReg.test( prevNode.textContent ) ) {
 				var name = $( this ).text();
 				if ( !surname ) {
 					surname = findSurname( pagename );
