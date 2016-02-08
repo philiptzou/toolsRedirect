@@ -162,8 +162,9 @@
 			if ( reload ) tab.loaded = false;
 			if ( !tab.loaded ) {
 				tab.cont.html( '' );
-				var desc = $( '<p class="desc">' +
-					this.msg.rediloading + '</p>' ).appendTo( tab.cont );
+				var desc = $( '<p class="desc"><span class="desc-text">' +
+					this.msg.rediloading + '</span></p>' ).appendTo( tab.cont ),
+					$text = desc.find( '> .desc-text' );
 				this.addMethods( desc, [ {
 					href: '#refresh',
 					title: self.msg.refresh,
@@ -173,8 +174,8 @@
 					}
 				} ] );
 				callback.apply( this )
-				.done( function() { desc.text( self.msg['tab' + tabname + 'desc'] ); } )
-				.fail( function() { desc.text( self.msg['tab' + tabname + 'notfound'] ); } );
+				.done( function() { $text.text( self.msg['tab' + tabname + 'desc'] ); } )
+				.fail( function() { $text.text( self.msg['tab' + tabname + 'notfound'] ); } );
 				tab.loaded = true;
 			}
 		},
