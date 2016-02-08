@@ -321,7 +321,7 @@
 					} );
 				} );
 
-				if ( has_redirect && $( 'a', desc ).length === 0 ) {
+				if ( has_redirect && deep === 1 ) {
 					self.addMethods( desc, [ {
 						href: '#select-all',
 						title: self.msg.selectall,
