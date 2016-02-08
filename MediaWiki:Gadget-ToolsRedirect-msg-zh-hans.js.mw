@@ -23,5 +23,6 @@ var tools_redirect_msg = {
 	createloading: '请稍候，正在自动创建重定向……',
 	createtext: '#REDIRECT [[$1]]',
 	createsummary: '编辑工具：自动创建重定向到[[$1]]',
+	errcycleredirect: '无法自动修复：发现循环重定向',
 	refresh: '刷新'
 };

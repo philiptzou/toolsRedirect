@@ -270,11 +270,16 @@
 				return this.findRedirect( origPageName );
 			}, reload );
 		},
-		loadRedirect: function( pagename, container, deep ) {
+		loadRedirect: function( pagename, container, deep, loaded ) {
 			this.loading( container );
 			var self = this,
 				deferObj = $.Deferred(),
 				top = deep ? $( '<dl/>' ).appendTo( container ) : container;
+
+			if ( !loaded ) {
+				loaded = {};
+				loaded[pagename] = true;
+			}
 
 			function onClickFix( evt ) {
 				/* jshint validthis: true */
@@ -296,25 +301,33 @@
 						return;
 					}
 					$.each( page.redirects, function( _, rdpage ) {
-						var rdtitle = rdpage.title,
+						var $container,
+							isCycleRedirect,
+							rdtitle = rdpage.title,
 							ultitle = rdtitle.replace( / /g, '_' ),
 							baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
 							entry = ( deep ? $( '<dd/>' ) : $( '<p/>' ) ).appendTo( top ),
 							methods = [ {href: baseuri + '&action=edit',
 										 title: self.msg.rediedit } ];
-						if ( deep ) {
+						isCycleRedirect = rdtitle in loaded;
+						loaded[rdtitle] = true;
+						if ( !isCycleRedirect && deep ) {
 							methods.push({
 								href: '#fix-redirect',
 								title: self.msg.tabviewfix,
 								click: onClickFix
 							} );
 						}
-						self.buildSelection(
+						$container = self.buildSelection(
 							{ href: baseuri + '&redirect=no', title: rdtitle },
 							methods, ultitle, !deep ).appendTo( entry );
-						if ( deep < maximumRedirectDepth ) {
+						if ( isCycleRedirect ) {
+							$container.append(
+								'<span class="error">' + self.msg.errcycleredirect + '</span>');
+						}
+						else if ( deep < maximumRedirectDepth ) {
 							deferObj.pipe( function() {
-								return self.loadRedirect( rdtitle, entry, deep + 1 );
+								return self.loadRedirect( rdtitle, entry, deep + 1, loaded );
 							} );
 						}
 						has_redirect = true;
