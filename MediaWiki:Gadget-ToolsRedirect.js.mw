@@ -83,13 +83,11 @@
 			var self = this,
 				tag = $( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
 				cont = $( '<div id="tab-' + tabname + '"/>' );
-			$( 'a', tag ).click(
-				function( evt ) {
-					evt.preventDefault();
-					self.tabselem.tabs( 'select', '#tab-' + tabname );
-					onClick.call( self );
-				}
-			);
+			$( 'a', tag ).click( function( evt ) {
+				// evt.preventDefault();
+				// self.tabselem.tabs( 'select', '#tab-' + tabname );
+				onClick.call( self );
+			} );
 			return { 'tag': tag, 'cont': cont, loaded: false };
 		},
 		_initTabView: function() {
