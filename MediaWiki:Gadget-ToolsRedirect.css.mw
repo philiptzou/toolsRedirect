@@ -4,11 +4,6 @@ div.dialog-redirect .mw-ajax-loader {
 	top: 0;
 }
 
-div.dialog-redirect span.gap {
-	padding-left:2px;
-	padding-right:2px;
-}
-
 div.dialog-redirect a:visited {
 	color:#0B0080;
 }
