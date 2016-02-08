@@ -162,7 +162,7 @@
 			} );
 			return deferObj.promise();
 		},
-		loadTabCont: function( tabname, deferred, reload ) {
+		loadTabCont: function( tabname, callback, reload ) {
 			var self = this,
 				tab = this.tabs[tabname];
 			if ( reload ) tab.loaded = false;
@@ -170,7 +170,7 @@
 				tab.cont.html( '' );
 				var desc = $( '<p class="desc">' +
 					this.msg.rediloading + '</p>' ).appendTo( tab.cont );
-				deferred
+				callback.apply( this )
 				.done( function() { desc.text( self.msg['tab' + tabname + 'desc'] ); } )
 				.fail( function() { desc.text( self.msg['tab' + tabname + 'notfound'] ); } );
 				tab.loaded = true;
@@ -251,12 +251,14 @@
 		},
 		loadView: function( reload ) {
 			var $container = this.tabs.view.cont;
-			this.loadTabCont(
-				'view',
-				this.loadRedirect( origPageName, $container, 0 ), reload );
+			this.loadTabCont( 'view', function() {
+				this.loadRedirect( origPageName, $container, 0 );
+			}, reload );
 		},
 		loadCreate: function( reload ) {
-			this.loadTabCont( 'create', this.findRedirect( origPageName ), reload );
+			this.loadTabCont( 'create', function() {
+				this.findRedirect( origPageName );
+			}, reload );
 		},
 		loadRedirect: function( pagename, container, deep ) {
 			this.loading( container );
