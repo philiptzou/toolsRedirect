@@ -1,6 +1,6 @@
 /* vim: set noexpandtab ft=javascript ts=4 sw=4: */
 
-( function ( jQuery ) {
+( function ( $ ) {
 	"use strict";
 
 	var _TR, msglang = 'zh-hans',
@@ -20,7 +20,7 @@
 				_findRedirectCallbacks.push(callback);
 			}
 			else {
-				jQuery.merge( _findRedirectCallbacks, arguments );
+				$.merge( _findRedirectCallbacks, arguments );
 			}
 			return this;
 		},
@@ -32,7 +32,7 @@
 			 * @param {string} selector
 			 */
 			_findRedirectCallbacks.push( function( pagename, $content ) {
-				return jQuery( selector ).map( function() {
+				return $( selector ).map( function() {
 					var title = $( this ).text();
 					return title ? title : null;
 				} );
@@ -49,22 +49,21 @@
 		variants: ['zh-cn', 'zh-hk', 'zh-mo', 'zh-sg', 'zh-tw'],
 		init: function() {
 			var self = this,
-					btn = jQuery( '<li id="ca-redirect"><span><a title="' +
-												this.msg.btndesc + '">' + this.msg.btntitle +
-												'</a></span></li>' );
+				btn = $(
+					'<li id="ca-redirect"><span><a title="' + this.msg.btndesc + '">' +
+					this.msg.btntitle + '</a></span></li>' );
 			btn.click( function( evt ) {
 				evt.preventDefault();
 				self.dialog();
 			} );
-			jQuery( 'li#ca-history' ).after( btn );
+			$( 'li#ca-history' ).after( btn );
 		},
 		dialog: function() {
-			var dlg = jQuery( '<div class="dialog-redirect" title="' +
-												this.msg.dlgtitle + '">' )
+			var dlg = $( '<div class="dialog-redirect" title="' + this.msg.dlgtitle + '">' )
 			.dialog( {
 				bgiframe: true, resizable: false, modal: true, width: 600 } );
-			this.tabselem = jQuery( '<div class="tab-redirect">' ).appendTo( dlg );
-			this.tagselem = jQuery( '<ul>' ).appendTo( this.tabselem );
+			this.tabselem = $( '<div class="tab-redirect">' ).appendTo( dlg );
+			this.tagselem = $( '<ul>' ).appendTo( this.tabselem );
 			this.addTabs();
 			this.tabselem.tabs();
 		},
@@ -82,9 +81,9 @@
 		},
 		createTab: function( tabname, tabtitle, callback ) {
 			var self = this,
-					tag = jQuery( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
-					cont = jQuery( '<div id="tab-' + tabname + '"/>' );
-			jQuery( 'a', tag ).click(
+					tag = $( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
+					cont = $( '<div id="tab-' + tabname + '"/>' );
+			$( 'a', tag ).click(
 				function( evt ) {
 					evt.preventDefault();
 					self.tabselem.tabs( 'select', '#tab-' + tabname );
@@ -105,8 +104,8 @@
 		},
 		fix: function( pagenames ) {
 			var self = this,
-					desc = jQuery( 'p.desc', this.tabs.view.cont ).text( this.msg.fixloading );
-			jQuery( 'p[class!=desc]', this.tabs.view.cont ).remove();
+				desc = $( 'p.desc', this.tabs.view.cont ).text( this.msg.fixloading );
+			$( 'p[class!=desc]', this.tabs.view.cont ).remove();
 			this.loading( this.tabs.view.cont );
 			this.bulkEdit(
 				pagenames,
@@ -122,8 +121,8 @@
 		},
 		create: function( pagenames ) {
 			var self = this,
-					desc = jQuery( 'p.desc', this.tabs.create.cont ).text( this.msg.createloading );
-			jQuery( 'p[class!=desc]', this.tabs.create.cont ).remove();
+				desc = $( 'p.desc', this.tabs.create.cont ).text( this.msg.createloading );
+			$( 'p[class!=desc]', this.tabs.create.cont ).remove();
 			this.loading( this.tabs.create.cont );
 			this.bulkEdit(
 				pagenames,
@@ -141,18 +140,18 @@
 		bulkEdit: function( titles, text, summary, callback ) {
 			var self = this;
 			titles = titles.join( '|' );
-			jQuery.ajax( this.buildQuery(
+			$.ajax( this.buildQuery(
 				{ action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' } ) )
 			.done( function( data ) {
 				var deferreds = [];
-				jQuery.each( data.query.pages, function( idx, page ) {
-					deferreds.push( jQuery.ajax(
+				$.each( data.query.pages, function( idx, page ) {
+					deferreds.push( $.ajax(
 						self.buildQuery( {
 							action: 'edit', title: page.title, token: page.edittoken,
 							'text': text, 'summary': summary } )
 					) );
 				});
-				jQuery.when.apply( jQuery, deferreds ).done( function() {
+				$.when.apply( $, deferreds ).done( function() {
 					callback.call( self );
 				} );
 			} );
@@ -164,11 +163,11 @@
 		},
 		loadTabCont: function( tabname, callback, reload ) {
 			var self = this,
-					tab = this.tabs[tabname];
+				tab = this.tabs[tabname];
 			if ( reload ) tab.loaded = false;
 			if ( !tab.loaded ) {
 				tab.cont.html( '' );
-				var desc = jQuery( '<p class="desc">' +
+				var desc = $( '<p class="desc">' +
 					this.msg.rediloading + '</p>' ).appendTo( tab.cont );
 				callback.call( this, function( success ) {
 					if ( success ) desc.text( self.msg['tab' + tabname + 'desc'] );
@@ -180,43 +179,43 @@
 		loading: function( container ) {
 			if ( container.prop( 'tagName' ).toLowerCase() == 'span' ) {
 				container.addClass( 'mw-ajax-loader' );
-			} else if ( jQuery( 'span.mw-ajax-loader', container ).length === 0 ) {
-				jQuery( '<span class="mw-ajax-loader"></span>' ).appendTo( container );
+			} else if ( $( 'span.mw-ajax-loader', container ).length === 0 ) {
+				$( '<span class="mw-ajax-loader"></span>' ).appendTo( container );
 			}
 		},
 		loaded: function( container ) {
 			if ( container.prop( 'tagName' ).toLowerCase() == 'span' ) {
 				container.removeClass( 'mw-ajax-loader' );
 			} else {
-				jQuery( 'span.mw-ajax-loader', container ).remove();
+				$( 'span.mw-ajax-loader', container ).remove();
 			}
 		},
 		selectAll: function( cont ) {
-			jQuery( 'input[type=checkbox]:not(:disabled)', cont )
+			$( 'input[type=checkbox]:not(:disabled)', cont )
 				.attr( 'checked', true );
 		},
 		selectInverse: function( cont ) {
-			jQuery( 'input[type=checkbox]:not(:disabled)', cont )
+			$( 'input[type=checkbox]:not(:disabled)', cont )
 				.each( function() {
-					var e = jQuery( this );
+					var e = $( this );
 					e.attr( 'checked', !e.attr( 'checked' ) );
 				} ); 
 		},
 		selectAction: function( cont, cb ) {
 			var pagenames = [];
-			jQuery( 'input[type=checkbox]:checked', cont )
+			$( 'input[type=checkbox]:checked', cont )
 			.each( function() {
-				pagenames.push( jQuery( this ).data( 'page-title' ) );
+				pagenames.push( $( this ).data( 'page-title' ) );
 			} );
 			if ( pagenames.length )
 				cb.call( this, pagenames );
 		},
 		clickAction: function( cont, cb ) {
-			var pagename = jQuery( 'input[type="checkbox"]', cont ).data( 'page-title' );
+			var pagename = $( 'input[type="checkbox"]', cont ).data( 'page-title' );
 			cb.call( this, [pagename] );
 		},
 		buildLink: function( attr ) {
-			var a = jQuery(
+			var a = $(
 				'<a href="' + attr.href + '" title="' + attr.title +
 				'" target="blank">' + attr.title + '</a>' );
 			if ( attr.click )
@@ -227,10 +226,10 @@
 		},
 		buildMethods: function( methods ) {
 			var self = this,
-					$container = jQuery( '<span/>' ),
+					$container = $( '<span/>' ),
 					methodLength = methods.length;
 			$container.append( methodLength ? ' (' : '' );
-			jQuery.each( methods, function( idx, method ) {
+			$.each( methods, function( idx, method ) {
 				self.buildLink( method ).appendTo( $container );
 				if ( idx + 1 < methodLength ) {
 					$container.append( '<span class="gap">|</span>' );
@@ -240,8 +239,8 @@
 			return $container;
 		},
 		buildSelection: function( main, metd, mt, dsab ) {
-			var cont = jQuery( '<span/>' );
-			var sele = jQuery( '<input type="checkbox"/>' ).appendTo( cont );
+			var cont = $( '<span/>' ),
+				sele = $( '<input type="checkbox"/>' ).appendTo( cont );
 			this.buildLink( main).appendTo( cont );
 			this.buildMethods( metd ).appendTo( cont );
 			sele.data( 'page-title', mt );
@@ -271,7 +270,7 @@
 		loadRedirect: function( pagename, container, deep, after ) {
 			this.loading( container );
 			var self = this,
-				top = deep ? jQuery( '<dl/>' ).appendTo( container ) : container;
+				top = deep ? $( '<dl/>' ).appendTo( container ) : container;
 
 			function onClickFix( evt ) {
 				/* jshint validthis: true */
@@ -280,23 +279,23 @@
 				self.clickAction( entry, self.fix );
 			}
 
-			jQuery.ajax( this.buildQuery(
+			$.ajax( this.buildQuery(
 				{ action: 'query', prop: 'redirects', titles: pagename, rdlimit: 'max' } ) )
 			.done( function( data ) {
 				self.loaded( container );
 				var has_redirect = false,
-					desc = jQuery( 'p.desc', self.tabs.view.cont ),
+					desc = $( 'p.desc', self.tabs.view.cont ),
 					maximumRedirectDepth = mw.config.get('toolsRedirectMaximumRedirectDepth', 10);
 
-				jQuery.each( data.query.pages, function( _, page ) {
+				$.each( data.query.pages, function( _, page ) {
 					if ( !( 'redirects' in page ) ) {
 						return;
 					}
-					jQuery.each( page.redirects, function( _, rdpage ) {
+					$.each( page.redirects, function( _, rdpage ) {
 						var rdtitle = rdpage.title,
 							ultitle = rdtitle.replace( / /g, '_' ),
 							baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
-							entry = ( deep ? jQuery( '<dd/>' ) : jQuery( '<p/>' ) ).appendTo( top ),
+							entry = ( deep ? $( '<dd/>' ) : $( '<p/>' ) ).appendTo( top ),
 							methods = [ {href: baseuri + '&action=edit',
 										 title: self.msg.rediedit } ];
 						if ( deep ) {
@@ -318,7 +317,7 @@
 				if ( after ) {
 					after.call( self, has_redirect );
 				}
-				else if ( has_redirect && jQuery( 'a', desc ).length === 0 ) {
+				else if ( has_redirect && $( 'a', desc ).length === 0 ) {
 					self.buildMethods(
 						[ { href: '#',
 							title: self.msg.selectall,
@@ -347,20 +346,20 @@
 				suffixReg = /^.+?( \(.+?\))$/,
 				retTitles = [],
 				deferreds = [],
-				deferObj = jQuery.Deferred();
+				deferObj = $.Deferred();
 			$.each( this.variants, function( _, variant ) {
-				deferreds.push( jQuery.ajax( self.buildQuery( {
+				deferreds.push( $.ajax( self.buildQuery( {
 					action: 'parse',
 					page: pagename,
 					prop: 'displaytitle',
 					variant: variant
 				} ) ) );
 			} );
-			jQuery.when.apply( jQuery, deferreds )
+			$.when.apply( $, deferreds )
 			.done( function() {
 				var suffixes = [];
 
-				jQuery.each( arguments, function() {
+				$.each( arguments, function() {
 					var suffix,
 						title = this[0].parse.displaytitle;
 
@@ -379,13 +378,13 @@
 				} );
 
 				// append suffixes
-				jQuery.each( jQuery.unique( suffixes ), function( _, suffix ) {
-					jQuery.merge( retTitles, jQuery.map( titles, function( title ) {
+				$.each( $.unique( suffixes ), function( _, suffix ) {
+					$.merge( retTitles, $.map( titles, function( title ) {
 						return suffixReg.test( title ) ? title : title + suffix;
 					} ) );
 				} );
 				
-				deferObj.resolveWith(self, [ jQuery.unique( retTitles ) ] );
+				deferObj.resolveWith(self, [ $.unique( retTitles ) ] );
 			} );
 
 			return deferObj.pipe( function ( titles ) {
@@ -399,24 +398,24 @@
 				alltitles = [],
 				variants = ['zh-hans', 'zh-hant'],
 				excludes = [ '用字模式' ],
-				deferObj = jQuery.Deferred();
+				deferObj = $.Deferred();
 			titles = titles.join( '|' );
 
-			jQuery.each( [ 'zh-hans', 'zh-hant' ], function( idx, variant ) {
-				deferreds.push( jQuery.ajax( self.buildQuery(
+			$.each( [ 'zh-hans', 'zh-hant' ], function( idx, variant ) {
+				deferreds.push( $.ajax( self.buildQuery(
 					{ action: 'parse', text: titles, prop: 'text', variant: variant } ) ) );
 			} );
 
-			jQuery.when.apply( jQuery, deferreds ).done( function() {
-				jQuery.each( arguments, function() {
-					alltitles = alltitles.concat( jQuery( this[0].parse.text['*'] )
+			$.when.apply( $, deferreds ).done( function() {
+				$.each( arguments, function() {
+					alltitles = alltitles.concat( $( this[0].parse.text['*'] )
 												  .text().replace( /(^\s*|\s*$)/g, '' ).split( '|' ) );
 				} );
 				alltitles = alltitles.join( '|' );
-				jQuery.ajax( self.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles } ) )
+				$.ajax( self.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles } ) )
 				.done( function( data ) {
 					titles = [];
-					jQuery.each( data.query.pages, function( pageid, page ) {
+					$.each( data.query.pages, function( pageid, page ) {
 						var title = page.title;
 						if ( pageid < 0 && excludes.indexOf( title ) === -1 ) {
 							titles.push( title );
@@ -435,11 +434,11 @@
 				frcDeferreds = [],
 				findBoldsAsTitles = mw.config.get('toolsRedirectFindBoldsAsTitles', false),
 				container = this.tabs.create.cont,
-				$content = jQuery( '#mw-content-text' ),
-				deferObj = jQuery.Deferred();
+				$content = $( '#mw-content-text' ),
+				deferObj = $.Deferred();
 			this.loading( container );
 
-			jQuery.each( _findRedirectCallbacks, function( _, callback ) {
+			$.each( _findRedirectCallbacks, function( _, callback ) {
 				var ret = callback( pagename, $content, titles );
 				if ( typeof ret === 'string' ) {
 					titles.push( ret );
@@ -449,12 +448,12 @@
 					frcDeferreds.push( ret );
 				}
 				else {
-					jQuery.merge( titles, ret );
+					$.merge( titles, ret );
 				}
 			} );
 
 			// remove all empty titles
-			titles = jQuery.map( titles, function( title ) {
+			titles = $.map( titles, function( title ) {
 				return title ? title : null;
 			} );
 
@@ -466,14 +465,14 @@
 			}
 
 			// handles the deferred callbacks
-			jQuery.when.apply( jQuery, frcDeferreds )
+			$.when.apply( $, frcDeferreds )
 			.pipe( function() {
-				jQuery.each( arguments, function( _, ret ) {
+				$.each( arguments, function( _, ret ) {
 					if (typeof ret == 'string' ) {
 						titles.push( ret );
 					}
 					else {
-						jQuery.merge( titles, ret );
+						$.merge( titles, ret );
 					}
 				} );
 				return self.findVariants( pagename, titles );
@@ -481,10 +480,10 @@
 			.done( function ( titles ) {
 				// build HTML
 				self.loaded( container );
-				jQuery.each( titles, function( _, title ) {
+				$.each( titles, function( _, title ) {
 					var ultitle = title.replace( ' ', '_' ),
 						baseuri = encodeURI( scriptPath + '/index.php?title=' + ultitle ),
-						entry = jQuery( '<p/>' ).appendTo( container );
+						entry = $( '<p/>' ).appendTo( container );
 					self.buildSelection(
 						{ href: baseuri + '&action=edit&redlink=1',
 						  title: title,
@@ -496,7 +495,7 @@
 						ultitle, false
 					).appendTo( entry );
 				} );
-				var desc = jQuery( 'p.desc', container );
+				var desc = $( 'p.desc', container );
 				if ( titles.length > 0 ) {
 					deferObj.resolveWith( self, [ titles ] );
 					self
@@ -547,7 +546,7 @@
 
 		_TR.msg = window.tools_redirect_msg;
 			
-		jQuery( function() {
+		$( function() {
 			mw.loader.using( ['jquery.ui.dialog', 'jquery.ui.tabs'], function () {
 				_TR.init();
 			} );
