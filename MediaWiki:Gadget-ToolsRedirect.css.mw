@@ -24,3 +24,15 @@ div.dialog-redirect a.new:visited {
 div.dialog-redirect a.new {
 	color:#CC2200;
 }
+
+.tools-redirect_methods > a:first-of-type:before {
+	content: '( ';
+}
+
+.tools-redirect_methods > a:before {
+	content: ' | ';
+}
+
+.tools-redirect_methods > a:last-of-type:after {
+	content: ' )';
+}

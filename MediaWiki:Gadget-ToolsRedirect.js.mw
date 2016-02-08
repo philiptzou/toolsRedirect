@@ -83,11 +83,7 @@
 			var self = this,
 				tag = $( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
 				cont = $( '<div id="tab-' + tabname + '"/>' );
-			$( 'a', tag ).click( function( evt ) {
-				// evt.preventDefault();
-				// self.tabselem.tabs( 'select', '#tab-' + tabname );
-				onClick.call( self );
-			} );
+			$( 'a', tag ).click( function() { onClick.call( self ); } );
 			return { 'tag': tag, 'cont': cont, loaded: false };
 		},
 		_initTabView: function() {
@@ -168,6 +164,14 @@
 				tab.cont.html( '' );
 				var desc = $( '<p class="desc">' +
 					this.msg.rediloading + '</p>' ).appendTo( tab.cont );
+				this.addMethods( desc, [ {
+					href: '#refresh',
+					title: self.msg.refresh,
+					click: function( evt ) {
+						evt.preventDefault();
+						self.loadTabCont( tabname, callback, true );
+					}
+				} ] );
 				callback.apply( this )
 				.done( function() { desc.text( self.msg['tab' + tabname + 'desc'] ); } )
 				.fail( function() { desc.text( self.msg['tab' + tabname + 'notfound'] ); } );
@@ -222,15 +226,22 @@
 				a.addClass( attr.classname );
 			return a;
 		},
-		buildMethods: function( methods ) {
+		addMethods: function( $parent, methods ) {
 			var self = this,
-					$container = $( '<span/>' ),
-					methodLength = methods.length;
-			$container.append( methodLength ? ' (' : '' );
+				$container = $parent.find( '> tools-redirect_methods' );
+
+			function methodExist( method ) {
+				return $container.find(
+					'a[href=' + JSON.stringify( method.href ) + ']' ).length > 0;
+			}
+
+			if ( $container.length === 0 ) {
+				$container = $( '<span class="tools-redirect_methods">' ).appendTo( $parent );
+			}
+
 			$.each( methods, function( idx, method ) {
-				self.buildLink( method ).appendTo( $container );
-				if ( idx + 1 < methodLength ) {
-					$container.append( '<span class="gap">|</span>' );
+				if ( !methodExist( method ) ) {
+					self.buildLink( method ).appendTo( $container );
 				}
 			} );
 			$container.append( methodLength ? ')' : '' );
@@ -240,7 +251,7 @@
 			var cont = $( '<span/>' ),
 				sele = $( '<input type="checkbox"/>' ).appendTo( cont );
 			this.buildLink( main).appendTo( cont );
-			this.buildMethods( metd ).appendTo( cont );
+			this.addMethods( cont, metd );
 			sele.data( 'page-title', mt );
 			if ( dsab ) {
 				sele.attr( 'disabled', true );
@@ -292,12 +303,13 @@
 										 title: self.msg.rediedit } ];
 						if ( deep ) {
 							methods.push({
-								href: '#',
+								href: '#fix-redirect',
 								title: self.msg.tabviewfix,
 								click: onClickFix
 							} );
 						}
-						self.buildSelection( { href: baseuri + '&redirect=no', title: rdtitle },
+						self.buildSelection(
+							{ href: baseuri + '&redirect=no', title: rdtitle },
 							methods, ultitle, !deep ).appendTo( entry );
 						if ( deep < maximumRedirectDepth ) {
 							deferObj.pipe( function() {
@@ -316,26 +328,25 @@
 				}
 
 				if ( has_redirect && $( 'a', desc ).length === 0 ) {
-					self.buildMethods(
-						[ { href: '#',
-							title: self.msg.selectall,
-							click: function( evt ) {
-								evt.preventDefault();
-								self.selectAll( self.tabs.view.cont ); }
-						},
-						{ href: '#',
-							title: self.msg.selectinverse,
-							click: function( evt ) {
-								evt.preventDefault();
-								self.selectInverse( self.tabs.view.cont ); }
-						},
-						{ href: '#',
-							title: self.msg.tabviewfix,
-							click: function( evt ) {
-								evt.preventDefault();
-								self.selectAction( self.tabs.view.cont, self.fix ); }
-						} ]
-					).appendTo( desc );
+					self.addMethods( desc, [ {
+						href: '#select-all',
+						title: self.msg.selectall,
+						click: function( evt ) {
+							evt.preventDefault();
+							self.selectAll( self.tabs.view.cont ); }
+					}, {
+						href: '#select-inverse',
+						title: self.msg.selectinverse,
+						click: function( evt ) {
+						evt.preventDefault();
+						self.selectInverse( self.tabs.view.cont ); }
+					}, {
+						href: '#fix-selected',
+						title: self.msg.tabviewfix,
+						click: function( evt ) {
+							evt.preventDefault();
+							self.selectAction( self.tabs.view.cont, self.fix ); }
+					} ] );
 				}
 			} );
 
@@ -488,7 +499,7 @@
 						{ href: baseuri + '&action=edit&redlink=1',
 						  title: title,
 						  classname: 'new' },
-						[ { href: '#',
+						[ { href: '#create-redirect',
 							title: self.msg.tabcreatetitle,
 							click: onClickCreate
 						} ],
@@ -499,29 +510,28 @@
 				if ( titles.length > 0 ) {
 					deferObj.resolveWith( self, [ titles ] );
 					self
-					.buildMethods( [ {
-						href: '#',
+					.addMethods( desc, [ {
+						href: '#select-all',
 						title: self.msg.selectall,
 						click: function( evt ) {
 							evt.preventDefault();
 							self.selectAll( container );
 						}
 					}, {
-						href: '#',
+						href: '#select-inverse',
 						title: self.msg.selectinverse,
 						click: function( evt ) {
 							evt.preventDefault();
 							self.selectInverse( container );
 						}
 					}, {
-						href: '#',
+						href: '#create-selected',
 						title: self.msg.tabcreatetitle,
 						click: function( evt ) {
 							evt.preventDefault();
 							self.selectAction( container, self.create );
 						}
-					} ] )
-					.appendTo( desc );
+					} ] );
 				}
 				else {
 					deferObj.rejectWith( self, [ titles ] );

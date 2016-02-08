@@ -22,5 +22,6 @@ var tools_redirect_msg = {
 	tabcreateall: '全部創建',
 	createloading: '請稍候，正在自動創建重定向……',
 	createtext: '#REDIRECT [[$1]]',
-	createsummary: '編輯工具：自動創建重定向到[[$1]]'
+	createsummary: '編輯工具：自動創建重定向到[[$1]]',
+	refresh: '刷新'
 };
