@@ -197,13 +197,13 @@
 		},
 		selectAll: function( cont ) {
 			$( 'input[type=checkbox]:not(:disabled)', cont )
-				.attr( 'checked', true );
+				.prop( 'checked', true );
 		},
 		selectInverse: function( cont ) {
 			$( 'input[type=checkbox]:not(:disabled)', cont )
 				.each( function() {
 					var e = $( this );
-					e.attr( 'checked', !e.attr( 'checked' ) );
+					e.prop( 'checked', !e.prop( 'checked' ) );
 				} ); 
 		},
 		selectAction: function( cont, cb ) {
