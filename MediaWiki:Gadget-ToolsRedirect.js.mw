@@ -224,7 +224,7 @@
 				a.click( attr.click );
 			if ( attr.classname )
 				a.addClass( attr.classname );
-			return a;
+			return $( '<span class="tools-redirect_link">' ).append( a );
 		},
 		addMethods: function( $parent, methods ) {
 			var self = this,
@@ -248,7 +248,7 @@
 		buildSelection: function( main, metd, mt, dsab ) {
 			var cont = $( '<span/>' ),
 				sele = $( '<input type="checkbox"/>' ).appendTo( cont );
-			this.buildLink( main).appendTo( cont );
+			this.buildLink( main ).appendTo( cont );
 			this.addMethods( cont, metd );
 			sele.data( 'page-title', mt );
 			if ( dsab ) {
