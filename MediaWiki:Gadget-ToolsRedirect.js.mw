@@ -229,7 +229,7 @@
 		},
 		addMethods: function( $parent, methods ) {
 			var self = this,
-				$container = $parent.find( '> tools-redirect_methods' );
+				$container = $parent.find( '> .tools-redirect_methods' );
 
 			function methodExist( method ) {
 				return $container.find(
