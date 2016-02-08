@@ -31,7 +31,7 @@ div.dialog-redirect a.new {
 }
 
 .tools-redirect_methods > .tools-redirect_link:first-of-type:before {
-	content: '( ';
+	content: ' ( ';
 }
 
 .tools-redirect_methods > .tools-redirect_link:before {
