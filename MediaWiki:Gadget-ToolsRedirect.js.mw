@@ -17,7 +17,7 @@
 			 * @param {function} callback( pagename, $content, titles ) -> title list
 			 */
 			if ( arguments.length === 1 ) {
-				_findRedirectCallbacks.push(callback);
+				_findRedirectCallbacks.push( callback );
 			}
 			else {
 				$.merge( _findRedirectCallbacks, arguments );
@@ -252,12 +252,12 @@
 		loadView: function( reload ) {
 			var $container = this.tabs.view.cont;
 			this.loadTabCont( 'view', function() {
-				this.loadRedirect( origPageName, $container, 0 );
+				return this.loadRedirect( origPageName, $container, 0 );
 			}, reload );
 		},
 		loadCreate: function( reload ) {
 			this.loadTabCont( 'create', function() {
-				this.findRedirect( origPageName );
+				return this.findRedirect( origPageName );
 			}, reload );
 		},
 		loadRedirect: function( pagename, container, deep ) {
