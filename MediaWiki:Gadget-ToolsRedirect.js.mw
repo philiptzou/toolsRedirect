@@ -79,15 +79,15 @@
 			// default tab, autoload when dialog initiate
 			this.loadView();
 		},
-		createTab: function( tabname, tabtitle, callback ) {
+		createTab: function( tabname, tabtitle, onClick ) {
 			var self = this,
-					tag = $( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
-					cont = $( '<div id="tab-' + tabname + '"/>' );
+				tag = $( '<li><a href="#tab-' + tabname + '">' + tabtitle + '</a></li>' ),
+				cont = $( '<div id="tab-' + tabname + '"/>' );
 			$( 'a', tag ).click(
 				function( evt ) {
 					evt.preventDefault();
 					self.tabselem.tabs( 'select', '#tab-' + tabname );
-					callback.call( self );
+					onClick.call( self );
 				}
 			);
 			return { 'tag': tag, 'cont': cont, loaded: false };
@@ -107,38 +107,43 @@
 				desc = $( 'p.desc', this.tabs.view.cont ).text( this.msg.fixloading );
 			$( 'p[class!=desc]', this.tabs.view.cont ).remove();
 			this.loading( this.tabs.view.cont );
-			this.bulkEdit(
+			this
+			.bulkEdit(
 				pagenames,
 				this.msg.fixtext.replace( '$1', origPageName ),
-				this.msg.fixsummary, function() {
-					// delay load before the asynchronous tasks on server finished
-					setTimeout( function() {
-						self.loaded( self.tabs.view.cont );
-						self.loadView( true );
-					}, 1500 );
-				}
-			);
+				this.msg.fixsummary
+			)
+			.done( function() {
+				// delay load before the asynchronous tasks on server finished
+				setTimeout( function() {
+					self.loaded( self.tabs.view.cont );
+					self.loadView( true );
+				}, 3000 );
+			} );
 		},
 		create: function( pagenames ) {
 			var self = this,
 				desc = $( 'p.desc', this.tabs.create.cont ).text( this.msg.createloading );
 			$( 'p[class!=desc]', this.tabs.create.cont ).remove();
 			this.loading( this.tabs.create.cont );
-			this.bulkEdit(
+			this
+			.bulkEdit(
 				pagenames,
 				this.msg.createtext.replace( '$1', origPageName ),
-				this.msg.createsummary.replace( '$1', origPageName ), function() {
-					// delay load before the asynchronous tasks on server finished
-					setTimeout( function() {
-						self.loaded( self.tabs.create.cont );
-						self.tabs.view.loaded = false;
-						self.loadCreate( true );
-					}, 1500 );
-				}
-			);
+				this.msg.createsummary.replace( '$1', origPageName )
+			)
+			.done( function() {
+				// delay load before the asynchronous tasks on server finished
+				setTimeout( function() {
+					self.loaded( self.tabs.create.cont );
+					self.tabs.view.loaded = false;
+					self.loadCreate( true );
+				}, 500 );
+			} );
 		},
-		bulkEdit: function( titles, text, summary, callback ) {
-			var self = this;
+		bulkEdit: function( titles, text, summary ) {
+			var self = this,
+				deferObj = $.Deferred();
 			titles = titles.join( '|' );
 			$.ajax( this.buildQuery(
 				{ action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' } ) )
@@ -152,16 +157,12 @@
 					) );
 				});
 				$.when.apply( $, deferreds ).done( function() {
-					callback.call( self );
+					deferObj.resolveWith( self );
 				} );
 			} );
+			return deferObj.promise();
 		},
-		reloadTabCont: function( tabname, callback ) {
-			var tab = this.tabs[tabname];
-			tab.loaded = false;
-			this.loadTabCont( tabname, callback );
-		},
-		loadTabCont: function( tabname, callback, reload ) {
+		loadTabCont: function( tabname, deferred, reload ) {
 			var self = this,
 				tab = this.tabs[tabname];
 			if ( reload ) tab.loaded = false;
@@ -169,10 +170,9 @@
 				tab.cont.html( '' );
 				var desc = $( '<p class="desc">' +
 					this.msg.rediloading + '</p>' ).appendTo( tab.cont );
-				callback.call( this, function( success ) {
-					if ( success ) desc.text( self.msg['tab' + tabname + 'desc'] );
-					else desc.text( self.msg['tab' + tabname + 'notfound'] );
-				} );
+				deferred
+				.done( function() { desc.text( self.msg['tab' + tabname + 'desc'] ); } )
+				.fail( function() { desc.text( self.msg['tab' + tabname + 'notfound'] ); } );
 				tab.loaded = true;
 			}
 		},
@@ -250,26 +250,18 @@
 			return cont;
 		},
 		loadView: function( reload ) {
-			var self = this;
-			this.loadTabCont( 'view', function( after ) {
-				self.loadRedirect( origPageName, self.tabs.view.cont, 0, after );
-			}, reload );
+			var $container = this.tabs.view.cont;
+			this.loadTabCont(
+				'view',
+				this.loadRedirect( origPageName, $container, 0 ), reload );
 		},
 		loadCreate: function( reload ) {
-			var self = this;
-			this.loadTabCont( 'create', function( after ) {
-				self.findRedirect( origPageName )
-				.done( function() {
-					after.call( self, true );
-				} )
-				.fail( function() {
-					after.call( self, false );
-				} );
-			}, reload );
+			this.loadTabCont( 'create', this.findRedirect( origPageName ), reload );
 		},
-		loadRedirect: function( pagename, container, deep, after ) {
+		loadRedirect: function( pagename, container, deep ) {
 			this.loading( container );
 			var self = this,
+				deferObj = $.Deferred(),
 				top = deep ? $( '<dl/>' ).appendTo( container ) : container;
 
 			function onClickFix( evt ) {
@@ -308,16 +300,22 @@
 						self.buildSelection( { href: baseuri + '&redirect=no', title: rdtitle },
 							methods, ultitle, !deep ).appendTo( entry );
 						if ( deep < maximumRedirectDepth ) {
-							self.loadRedirect( rdtitle, entry, deep + 1 );
+							deferObj.pipe( function() {
+								return self.loadRedirect( rdtitle, entry, deep + 1 );
+							} );
 						}
 						has_redirect = true;
 					} );
 				} );
 
-				if ( after ) {
-					after.call( self, has_redirect );
+				if ( has_redirect ) {
+					deferObj.resolveWith( self );
 				}
-				else if ( has_redirect && $( 'a', desc ).length === 0 ) {
+				else {
+					deferObj.rejectWith( self );
+				}
+
+				if ( has_redirect && $( 'a', desc ).length === 0 ) {
 					self.buildMethods(
 						[ { href: '#',
 							title: self.msg.selectall,
@@ -340,6 +338,8 @@
 					).appendTo( desc );
 				}
 			} );
+
+			return deferObj.promise();
 		},
 		findVariants: function( pagename, titles ) {
 			var self = this,
