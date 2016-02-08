@@ -196,15 +196,14 @@
 			}
 		},
 		selectAll: function( cont ) {
-			$( 'input[type=checkbox]:not(:disabled)', cont )
-				.prop( 'checked', true );
+			$( 'input[type=checkbox]:not(:disabled)', cont ).each( function() {
+				this.checked = true;
+			} );
 		},
 		selectInverse: function( cont ) {
-			$( 'input[type=checkbox]:not(:disabled)', cont )
-				.each( function() {
-					var e = $( this );
-					e.prop( 'checked', !e.prop( 'checked' ) );
-				} ); 
+			$( 'input[type=checkbox]:not(:disabled)', cont ).each( function() {
+				$( this ).toggle( this.checked );
+			} ); 
 		},
 		selectAction: function( cont, cb ) {
 			var pagenames = [];
