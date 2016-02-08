@@ -165,17 +165,19 @@
 				var desc = $( '<p class="desc"><span class="desc-text">' +
 					this.msg.rediloading + '</span></p>' ).appendTo( tab.cont ),
 					$text = desc.find( '> .desc-text' );
-				this.addMethods( desc, [ {
-					href: '#refresh',
-					title: self.msg.refresh,
-					click: function( evt ) {
-						evt.preventDefault();
-						self.loadTabCont( tabname, callback, true );
-					}
-				} ] );
 				callback.apply( this )
 				.done( function() { $text.text( self.msg['tab' + tabname + 'desc'] ); } )
-				.fail( function() { $text.text( self.msg['tab' + tabname + 'notfound'] ); } );
+				.fail( function() { $text.text( self.msg['tab' + tabname + 'notfound'] ); } )
+				.always( function() {
+					self.addMethods( desc, [ {
+						href: '#refresh',
+						title: self.msg.refresh,
+						click: function( evt ) {
+							evt.preventDefault();
+							self.loadTabCont( tabname, callback, true );
+						}
+					} ] );
+				} );
 				tab.loaded = true;
 			}
 		},
@@ -319,13 +321,6 @@
 					} );
 				} );
 
-				if ( has_redirect ) {
-					deferObj.resolveWith( self );
-				}
-				else {
-					deferObj.rejectWith( self );
-				}
-
 				if ( has_redirect && $( 'a', desc ).length === 0 ) {
 					self.addMethods( desc, [ {
 						href: '#select-all',
@@ -347,6 +342,14 @@
 							self.selectAction( self.tabs.view.cont, self.fix ); }
 					} ] );
 				}
+
+				if ( has_redirect ) {
+					deferObj.resolveWith( self );
+				}
+				else {
+					deferObj.rejectWith( self );
+				}
+
 			} );
 
 			return deferObj.promise();
@@ -507,7 +510,6 @@
 				} );
 				var desc = $( 'p.desc', container );
 				if ( titles.length > 0 ) {
-					deferObj.resolveWith( self, [ titles ] );
 					self
 					.addMethods( desc, [ {
 						href: '#select-all',
@@ -531,6 +533,7 @@
 							self.selectAction( container, self.create );
 						}
 					} ] );
+					deferObj.resolveWith( self, [ titles ] );
 				}
 				else {
 					deferObj.rejectWith( self, [ titles ] );
