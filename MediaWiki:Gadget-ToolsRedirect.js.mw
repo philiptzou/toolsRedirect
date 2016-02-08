@@ -244,8 +244,6 @@
 					self.buildLink( method ).appendTo( $container );
 				}
 			} );
-			$container.append( methodLength ? ')' : '' );
-			return $container;
 		},
 		buildSelection: function( main, metd, mt, dsab ) {
 			var cont = $( '<span/>' ),
