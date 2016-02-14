@@ -453,14 +453,28 @@
 					if ( variant in simpAndTrad ) {
 						mw.toolsRedirect.setRedirectTextSuffix(
 							title, '\n{{簡繁重定向}}', SUFFIX_APPEND );
-						if ( isCategory ) {
-							// should not create simp/trad redirection for
-							// categories or it will mess up a lot
-							_redirectExcludes[title] = true;
-						}
 					}
 					return title;
 				} );
+				if ( isCategory ) {
+					xhr = xhr.then( function( origTitle ) {
+						return $.ajax( self.buildQuery( {
+							action: 'parse',
+							text: pagename,
+							prop: 'text',
+							variant: variant
+						} ) )
+						.then( function( data ) {
+							var tmpTitle = $( this[0].parse.text['*'] )
+								.text().replace( /(^\s*|\s*$)/g, '' );
+							// should not create redirect categories
+							// if the conversion is already in global table,
+							// or it will mess up a lot
+							_redirectExcludes[tmpTitle] = true;
+							return origTitle;
+						} );
+					} );
+				}
 				deferreds.push( xhr );
 			} );
 			return $.when.apply( $, deferreds )
