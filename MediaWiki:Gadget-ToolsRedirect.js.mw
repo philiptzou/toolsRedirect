@@ -422,7 +422,7 @@
 					variant: variant
 				} ) )
 				.then( function( data ) {
-					title = data[0].parse.displaytitle;
+					title = data.parse.displaytitle;
 					if ( variant in simpAndTrad ) {
 						mw.toolsRedirect.setRedirectTextSuffix(
 							title, '\n{{簡繁重定向}}', SUFFIX_APPEND );
