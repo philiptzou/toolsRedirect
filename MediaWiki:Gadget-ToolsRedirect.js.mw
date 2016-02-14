@@ -136,25 +136,22 @@
 			} );
 		},
 		bulkEdit: function( titles, text, summary ) {
-			var self = this,
-				deferObj = $.Deferred();
+			var self = this;
 			titles = titles.join( '|' );
-			$.ajax( this.buildQuery(
-				{ action: 'query', prop: 'info', 'titles': titles, intoken: 'edit' } ) )
-			.done( function( data ) {
+			
+			return $.ajax( this.buildQuery(
+				{ action: 'query', prop: 'info', titles: titles, intoken: 'edit' } ) )
+			.then( function( data ) {
 				var deferreds = [];
 				$.each( data.query.pages, function( idx, page ) {
 					deferreds.push( $.ajax(
 						self.buildQuery( {
 							action: 'edit', title: page.title, token: page.edittoken,
-							'text': text, 'summary': summary } )
+							text: text, summary: summary, tags: 'ToolsRedirect'} )
 					) );
 				});
-				$.when.apply( $, deferreds ).done( function() {
-					deferObj.resolveWith( self );
-				} );
+				return $.when.apply( $, deferreds );
 			} );
-			return deferObj.promise();
 		},
 		loadTabCont: function( tabname, callback, reload ) {
 			var self = this,
@@ -326,7 +323,7 @@
 								'<span class="error">' + self.msg.errcycleredirect + '</span>');
 						}
 						else if ( deep < maximumRedirectDepth ) {
-							deferObj.pipe( function() {
+							deferObj.done( function() {
 								return self.loadRedirect( rdtitle, entry, deep + 1, loaded );
 							} );
 						}
@@ -371,8 +368,7 @@
 			var self = this,
 				suffixReg = /^.+?( \(.+?\))$/,
 				retTitles = [],
-				deferreds = [],
-				deferObj = $.Deferred();
+				deferreds = [];
 			$.each( this.variants, function( _, variant ) {
 				deferreds.push( $.ajax( self.buildQuery( {
 					action: 'parse',
@@ -381,8 +377,8 @@
 					variant: variant
 				} ) ) );
 			} );
-			$.when.apply( $, deferreds )
-			.done( function() {
+			return $.when.apply( $, deferreds )
+			.then( function() {
 				var suffixes = [];
 
 				$.each( arguments, function() {
@@ -410,12 +406,8 @@
 					} ) );
 				} );
 				
-				deferObj.resolveWith(self, [ $.unique( retTitles ) ] );
+				return self.findNotExists( $.unique( retTitles ) );
 			} );
-
-			return deferObj.pipe( function ( titles ) {
-				return self.findNotExists( titles );
-			} ).promise();
 		},
 
 		findNotExists: function( titles ) {
@@ -423,8 +415,7 @@
 				deferreds = [],
 				alltitles = [],
 				variants = ['zh-hans', 'zh-hant'],
-				excludes = [ '用字模式' ],
-				deferObj = $.Deferred();
+				excludes = [ '用字模式' ];
 			titles = titles.join( '|' );
 
 			$.each( [ 'zh-hans', 'zh-hant' ], function( idx, variant ) {
@@ -432,14 +423,21 @@
 					{ action: 'parse', text: titles, prop: 'text', variant: variant } ) ) );
 			} );
 
-			$.when.apply( $, deferreds ).done( function() {
+			return $.when.apply( $, deferreds )
+			.then( function() {
 				$.each( arguments, function() {
-					alltitles = alltitles.concat( $( this[0].parse.text['*'] )
-												  .text().replace( /(^\s*|\s*$)/g, '' ).split( '|' ) );
+					alltitles = alltitles.concat(
+						$( this[0].parse.text['*'] )
+						.text().replace( /(^\s*|\s*$)/g, '' ).split( '|' )
+					);
 				} );
 				alltitles = alltitles.join( '|' );
-				$.ajax( self.buildQuery( {action: 'query', prop: 'info', 'titles': alltitles } ) )
-				.done( function( data ) {
+				return $.ajax( self.buildQuery( {
+					action: 'query',
+					prop: 'info',
+					titles: alltitles
+				} ) )
+				.then( function( data ) {
 					titles = [];
 					$.each( data.query.pages, function( pageid, page ) {
 						var title = page.title;
@@ -447,11 +445,9 @@
 							titles.push( title );
 						}
 					} );
-					deferObj.resolveWith( self, [ titles ] );
+					return titles;
 				} );
 			} );
-
-			return deferObj.promise();
 		},
 
 		findRedirect: function( pagename ) {
@@ -492,7 +488,7 @@
 
 			// handles the deferred callbacks
 			$.when.apply( $, frcDeferreds )
-			.pipe( function() {
+			.then( function() {
 				$.each( arguments, function( _, ret ) {
 					if (typeof ret == 'string' ) {
 						titles.push( ret );
