@@ -6,9 +6,18 @@
 	var _TR, msglang = 'zh-hans',
 		origPageName = mw.config.get('wgPageName'),
 		scriptPath = mw.config.get('wgScriptPath'),
-		_findRedirectCallbacks = [];
+		_findRedirectCallbacks = [],
+		_pageWithRedirectTextSuffix = {},
+		SUFFIX_APPEND = 0,
+		SUFFIX_REPLACE = 1,
+		SUFFIX_SETDEFAULT = 2;
+
 
 	mw.toolsRedirect = {
+
+		SUFFIX_APPEND: SUFFIX_APPEND,
+		SUFFIX_REPLACE: SUFFIX_REPLACE,
+		SUFFIX_SETDEFAULT: SUFFIX_SETDEFAULT,
 
 		findRedirectCallback: function( callback ) {
 			/* Add new custom callback for finding new
@@ -38,6 +47,28 @@
 				} );
 			} );
 			return this;
+		},
+
+		setRedirectTextSuffix: function( title, suffix, flag ) {
+			var flag_set = false,
+				flag_append = false;
+			flag = flag || SUFFIX_APPEND; // default append
+			flag_set = flag === SUFFIX_REPLACE;
+			if ( title in _pageWithRedirectTextSuffix ) {
+				flag_append = flag === SUFFIX_APPEND;
+			}
+			else {
+				// if not exist, every flag can set
+				flag_set = true;
+			}
+
+			if ( flag_set ) {
+				_pageWithRedirectTextSuffix[title] = suffix;
+			}
+			else if ( flag_append ) {
+				_pageWithRedirectTextSuffix[title] =
+					_pageWithRedirectTextSuffix[title] + suffix;
+			}
 		}
 
 	};
@@ -135,6 +166,16 @@
 				}, 500 );
 			} );
 		},
+		addRedirectTextSuffix: function( title, text ) {
+			if ( title in _pageWithRedirectTextSuffix ) {
+				text = text + _pageWithRedirectTextSuffix[title];
+			}
+			if ( /^Category:/.test( title ) ) {
+				target = /\[\[Category:(.+?)\]\]/.exec( text )[1];
+				text = text + '\n{{分类重定向|$1}}'.replace( '$1', target );
+			}
+			return text;
+		},
 		bulkEdit: function( titles, text, summary ) {
 			var self = this;
 			titles = titles.join( '|' );
@@ -144,11 +185,14 @@
 			.then( function( data ) {
 				var deferreds = [];
 				$.each( data.query.pages, function( idx, page ) {
-					deferreds.push( $.ajax(
-						self.buildQuery( {
-							action: 'edit', title: page.title, token: page.edittoken,
-							text: text, summary: summary, tags: 'ToolsRedirect'} )
-					) );
+					deferreds.push( $.ajax( self.buildQuery( {
+						action: 'edit',
+						title: page.title,
+						token: page.edittoken,
+						text: self.addRedirectTextSuffix( title, text ),
+						summary: summary,
+						tags: 'ToolsRedirect'
+					} ) ) );
 				});
 				return $.when.apply( $, deferreds );
 			} );
@@ -368,14 +412,24 @@
 			var self = this,
 				suffixReg = /^.+?( \(.+?\))$/,
 				retTitles = [],
-				deferreds = [];
+				deferreds = [],
+				simpAndTrad = { 'zh-hans': true, 'zh-hant': true };
 			$.each( this.variants, function( _, variant ) {
-				deferreds.push( $.ajax( self.buildQuery( {
+				var xhr = $.ajax( self.buildQuery( {
 					action: 'parse',
 					page: pagename,
 					prop: 'displaytitle',
 					variant: variant
-				} ) ) );
+				} ) )
+				.then( function( data ) {
+					title = data[0].parse.displaytitle;
+					if ( variant in simpAndTrad ) {
+						mw.toolsRedirect.setRedirectTextSuffix(
+							title, '\n{{簡繁重定向}}', SUFFIX_APPEND );
+					}
+					return title;
+				} );
+				deferreds.push( xhr );
 			} );
 			return $.when.apply( $, deferreds )
 			.then( function() {
@@ -383,7 +437,7 @@
 
 				$.each( arguments, function() {
 					var suffix,
-						title = this[0].parse.displaytitle;
+						title = this;
 
 					// find title suffix,
 					// for example " (济南市)" to "市中区 (济南市)"
@@ -397,6 +451,7 @@
 
 					retTitles.push( title );
 					suffixes.push( suffix );
+
 				} );
 
 				// append suffixes
@@ -442,6 +497,9 @@
 					$.each( data.query.pages, function( pageid, page ) {
 						var title = page.title;
 						if ( pageid < 0 && excludes.indexOf( title ) === -1 ) {
+							// only set default suffix
+							mw.toolsRedirect.setRedirectTextSuffix(
+								title, '\n{{別名重定向}}', SUFFIX_SETDEFAULT );
 							titles.push( title );
 						}
 					} );

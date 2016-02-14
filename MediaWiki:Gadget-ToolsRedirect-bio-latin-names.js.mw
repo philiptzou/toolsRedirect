@@ -4,20 +4,22 @@ mw.loader.using( ['ext.gadget.ToolsRedirect'], function() {
 	"use strict";
 	var prefixReg = /[學学]名\s*：?\s*$/,
 		colonReg = /^\s*[:：]?\s*$/,
-		fdc = mw.toolsRedirect.findRedirectCallback;
+		tr = mw.toolsRedirect;
 
-	fdc( function ( pagename, $content ) {
+	tr.findRedirectCallback( function ( pagename, $content ) {
 		var surname,
 			retTitles = [];
 
 		$content.find( '> p > [lang="la"], > p > i' ).each( function() {
-			var prevNode = this.previousSibling;
+			var title, prevNode = this.previousSibling;
 			if ( prevNode && colonReg.test( prevNode.textContent ) ) {
 				prevNode = prevNode.previousSibling;
 			}
 			if ( prevNode && prefixReg.test( prevNode.textContent ) ) {
 				// trim() is not supported by IE<9
-				retTitles.push( jQuery( this ).text().replace( /^\s+|\s+$/g, '' ) );
+				title = jQuery( this ).text().replace( /^\s+|\s+$/g, '' );
+				retTitles.push( title );
+				tr.setRedirectTextSuffix( title, '\n{{非中文重定向}}' );
 			}
 		} );
 
