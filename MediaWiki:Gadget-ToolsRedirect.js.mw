@@ -189,7 +189,7 @@
 						action: 'edit',
 						title: page.title,
 						token: page.edittoken,
-						text: self.addRedirectTextSuffix( title, text ),
+						text: self.addRedirectTextSuffix( page.title, text ),
 						summary: summary,
 						tags: 'ToolsRedirect'
 					} ) ) );
