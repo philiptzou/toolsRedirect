@@ -465,7 +465,7 @@
 							variant: variant
 						} ) )
 						.then( function( data ) {
-							var tmpTitle = $( this[0].parse.text['*'] )
+							var tmpTitle = $( data.parse.text['*'] )
 								.text().replace( /(^\s*|\s*$)/g, '' );
 							// should not create redirect categories
 							// if the conversion is already in global table,
