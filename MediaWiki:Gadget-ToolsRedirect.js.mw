@@ -13,8 +13,33 @@
 		_redirectExcludes = {},
 		SUFFIX_APPEND = 0,
 		SUFFIX_REPLACE = 1,
-		SUFFIX_SETDEFAULT = 2;
+		SUFFIX_SETDEFAULT = 2,
+		_nsCanonPrefix = origPageName.split( ':' )[0] + ':',
+		_nsPrefixPattern = $.map(
+			mw.config.get( 'wgNamespaceIds' ), function( nsid, text ) {
+				return nsid === nsNumber ? text : null;
+			} ).join( '|' );
+	_nsPrefixPattern = new RegExp( '^(' + _nsPrefix + '):', 'i' );
 
+	if ( nsNumber === 0 ) { // articles
+		_nsCanonPrefix = '';
+		_nsPrefixPattern = /^/;
+	}
+
+	function fixNamespace( title ) {
+		if ( nsNumber === 0 ) {
+			// do nothing if it's articles
+			return title;
+		}
+		else if ( _nsPrefixPattern.test( title ) ) {
+			// canonize the namespace
+			return title.replace( _nsPrefixPattern, _nsCanonPrefix );
+		}
+		else {
+			// don't have a namespace
+			return _nsCanonPrefix + title;
+		}
+	}
 
 	mw.toolsRedirect = {
 
@@ -57,6 +82,7 @@
 				flag_append = false;
 			flag = flag || SUFFIX_APPEND; // default append
 			flag_set = flag === SUFFIX_REPLACE;
+			title = fixNamespace( title );
 			if ( title in _pageWithRedirectTextSuffix ) {
 				flag_append = flag === SUFFIX_APPEND;
 			}
@@ -423,7 +449,7 @@
 					variant: variant
 				} ) )
 				.then( function( data ) {
-					var title = data.parse.displaytitle;
+					var title = fixNamespace( data.parse.displaytitle );
 					if ( variant in simpAndTrad ) {
 						mw.toolsRedirect.setRedirectTextSuffix(
 							title, '\n{{簡繁重定向}}', SUFFIX_APPEND );
@@ -463,6 +489,7 @@
 				// append suffixes
 				$.each( $.unique( suffixes ), function( _, suffix ) {
 					$.merge( retTitles, $.map( titles, function( title ) {
+						title = fixNamespace( title );
 						return suffixReg.test( title ) ? title : title + suffix;
 					} ) );
 				} );
