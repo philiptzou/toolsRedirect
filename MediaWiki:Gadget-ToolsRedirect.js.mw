@@ -422,7 +422,7 @@
 					variant: variant
 				} ) )
 				.then( function( data ) {
-					title = data.parse.displaytitle;
+					var title = data.parse.displaytitle;
 					if ( variant in simpAndTrad ) {
 						mw.toolsRedirect.setRedirectTextSuffix(
 							title, '\n{{簡繁重定向}}', SUFFIX_APPEND );
@@ -441,7 +441,7 @@
 
 					// find title suffix,
 					// for example " (济南市)" to "市中区 (济南市)"
-					suffix = suffixReg.exec(title);
+					suffix = suffixReg.exec( title );
 					if ( suffix && suffix.length === 2) {
 						suffix = suffix[1];
 					}
