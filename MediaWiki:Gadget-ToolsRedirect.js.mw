@@ -77,7 +77,9 @@
 		msg: null,
 		tabselem: null,
 		tagselem: null,
-		variants: ['zh-cn', 'zh-hk', 'zh-mo', 'zh-sg', 'zh-tw'],
+		variants: [
+			'zh-hans', 'zh-hant', 'zh-cn', 'zh-hk',
+			'zh-mo', 'zh-sg', 'zh-tw'],
 		init: function() {
 			var self = this,
 				btn = $(
