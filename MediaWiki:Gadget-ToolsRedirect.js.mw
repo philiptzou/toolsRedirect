@@ -504,7 +504,7 @@
 						var title = page.title;
 						if ( pageid < 0 && excludes.indexOf( title ) === -1 ) {
 
-							if ( !( title in _redirectExcludes ) ) {
+							if ( title in _redirectExcludes ) {
 								// exclude special titles
 								return;
 							}
