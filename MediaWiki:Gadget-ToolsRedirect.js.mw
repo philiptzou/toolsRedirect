@@ -19,7 +19,7 @@
 			mw.config.get( 'wgNamespaceIds' ), function( nsid, text ) {
 				return nsid === nsNumber ? text : null;
 			} ).join( '|' );
-	_nsPrefixPattern = new RegExp( '^(' + _nsPrefix + '):', 'i' );
+	_nsPrefixPattern = new RegExp( '^(' + _nsPrefixPattern + '):', 'i' );
 
 	if ( nsNumber === 0 ) { // articles
 		_nsCanonPrefix = '';
