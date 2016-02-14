@@ -6,8 +6,11 @@
 	var _TR, msglang = 'zh-hans',
 		origPageName = mw.config.get('wgPageName'),
 		scriptPath = mw.config.get('wgScriptPath'),
+		nsNumber = mw.config.get('wgNamespaceNumber'),
+		isCategory = nsNumber === 14,
 		_findRedirectCallbacks = [],
 		_pageWithRedirectTextSuffix = {},
+		_redirectExcludes = {},
 		SUFFIX_APPEND = 0,
 		SUFFIX_REPLACE = 1,
 		SUFFIX_SETDEFAULT = 2;
@@ -171,10 +174,6 @@
 		addRedirectTextSuffix: function( title, text ) {
 			if ( title in _pageWithRedirectTextSuffix ) {
 				text = text + _pageWithRedirectTextSuffix[title];
-			}
-			if ( /^Category:/.test( title ) ) {
-				target = /\[\[Category:(.+?)\]\]/.exec( text )[1];
-				text = text + '\n{{分类重定向|$1}}'.replace( '$1', target );
 			}
 			return text;
 		},
@@ -428,6 +427,11 @@
 					if ( variant in simpAndTrad ) {
 						mw.toolsRedirect.setRedirectTextSuffix(
 							title, '\n{{簡繁重定向}}', SUFFIX_APPEND );
+						if ( isCategory ) {
+							// should not create simp/trad redirection for
+							// categories or it will mess up a lot
+							_redirectExcludes[title] = true;
+						}
 					}
 					return title;
 				} );
@@ -499,10 +503,25 @@
 					$.each( data.query.pages, function( pageid, page ) {
 						var title = page.title;
 						if ( pageid < 0 && excludes.indexOf( title ) === -1 ) {
+
+							if ( !( title in _redirectExcludes ) ) {
+								// exclude special titles
+								return;
+							}
+
+							titles.push( title );
+
+							if ( isCategory ) {
+								var target = origPageName.replace( /^Category:/, '' );
+								mw.toolsRedirect.setRedirectTextSuffix(
+									title,
+									'\n{{分类重定向|$1}}'.replace( '$1', target )
+								);
+							}
+
 							// only set default suffix
 							mw.toolsRedirect.setRedirectTextSuffix(
 								title, '\n{{別名重定向}}', SUFFIX_SETDEFAULT );
-							titles.push( title );
 						}
 					} );
 					return titles;
